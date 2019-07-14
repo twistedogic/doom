@@ -29,7 +29,12 @@ func (c *Client) GetMatchDetail(matchID int, value interface{}) error {
 }
 
 func (c *Client) GetLastMatches(teamID int, value interface{}) error {
-	u := fmt.Sprintf("%s/Etc:UTC/gismo/stats_team_lastx/%d/5", c.BaseURL, matchID)
+	u := fmt.Sprintf("%s/Etc:UTC/gismo/stats_team_lastx/%d/5", c.BaseURL, teamID)
+	return client.GetJSON(u, value)
+}
+
+func (c *Client) GetBet(offset int, value interface{}) error {
+	u := fmt.Sprintf("%s/Asia:Shanghai/gismo/bet_get/hkjc/%d", c.BaseURL, offset)
 	return client.GetJSON(u, value)
 }
 

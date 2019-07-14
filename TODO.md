@@ -1,0 +1,3 @@
+ - use json.Unmarshal for jsonpath
+ - translate struct to gql
+ - use badgerhold
