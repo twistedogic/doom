@@ -3,20 +3,11 @@
 # Refer to https://gqlgen.com/config/
 # for detailed .gqlgen.yml documentation.
 
-schema:
-- schema.graphql
+schema: schema.graphql
 exec:
-  filename: generated.go
-model:
-  filename: models_gen.go
+  filename: gql/generated/generated.go
 resolver:
-  filename: resolver.go
+  filename: gql/resolver.go # where to write them
   type: Resolver
-autobind: []
-directives:
-  deprecated:
-    skip_runtime: true
-  include:
-    skip_runtime: true
-  skip:
-    skip_runtime: true
+autobind:
+  - github.com/twistedogic/doom/pkg/model

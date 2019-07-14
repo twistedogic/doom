@@ -85,7 +85,6 @@ func TestStore(t *testing.T) {
 			if !cmp.Equal(tc.want, got) {
 				t.Fatalf("want %#v, got %#v", tc.want, got)
 			}
-			t.Logf("%#v", got)
 		})
 	}
 }

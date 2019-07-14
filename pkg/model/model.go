@@ -1,4 +1,4 @@
-package schema
+package model
 
 import (
 	"encoding/json"
@@ -8,8 +8,8 @@ import (
 	"github.com/fatih/structs"
 	"github.com/iancoleman/strcase"
 	"github.com/mitchellh/mapstructure"
-	"github.com/oliveagle/jsonpath"
-	"github.com/twistedogic/doom/pkg/schema/schemautil"
+	"github.com/twistedogic/doom/pkg/helper"
+	"github.com/twistedogic/doom/pkg/jsonpath"
 )
 
 type Value struct {
@@ -51,6 +51,11 @@ type Values struct {
 	GoalAttempts    Value
 }
 
+func IsNumber(s string) bool {
+	_, err := strconv.Atoi(s)
+	return err == nil
+}
+
 func (v *Values) Parse(i interface{}) error {
 	m := make(map[string]struct {
 		Name  string
@@ -61,14 +66,15 @@ func (v *Values) Parse(i interface{}) error {
 	}
 	for _, name := range structs.Names(v) {
 		snake := strcase.ToSnake(name)
-		title := strings.Replace(strings.Title(snake), "_", " ", -1)
-		for _, val := range m {
-			if val.Name == title {
+		start := strings.Replace(strings.Title(snake), "_", " ", -1)
+		title := strings.Title(strings.Replace(snake, "_", " ", -1))
+		for key, val := range m {
+			if (val.Name == title || val.Name == start) && (IsNumber(key) || key == "goalattempts") {
 				var value Value
 				if err := ParseValue(val.Value, &value); err != nil {
 					return err
 				}
-				if err := schemautil.SetField(v, name, value); err != nil {
+				if err := helper.SetField(v, name, value); err != nil {
 					return err
 				}
 			}
@@ -89,14 +95,10 @@ func (d *Detail) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &in); err != nil {
 		return err
 	}
-	if err := schemautil.ParseJsonpath(in, d); err != nil {
+	if err := jsonpath.ParseJsonpath(in, d); err != nil {
 		return err
 	}
-	jpath, err := jsonpath.Compile("$.values")
-	if err != nil {
-		return err
-	}
-	value, err := jpath.Lookup(in)
+	value, err := jsonpath.Lookup("$.values", in)
 	if err != nil {
 		return err
 	}
@@ -105,20 +107,12 @@ func (d *Detail) UnmarshalJSON(b []byte) error {
 
 type Team struct {
 	Name string `jsonpath:"$.name" boltholdIndex:"Team"`
-	ID   uint64 `jsonpath:"$._id"`
+	ID   int    `jsonpath:"$._id"`
 }
 
 type Match struct {
-	ID   uint64 `jsonpath:"$._id"`
-	Home Team   `jsonpath:"$.teams.home"`
-	Away Team   `jsonpath:"$.teams.away"`
-	Date int    `jsonpath:"$._dt.uts"`
-}
-
-func (m *Match) UnmarshalJSON(b []byte) error {
-	var in interface{}
-	if err := json.Unmarshal(b, &in); err != nil {
-		return err
-	}
-	return schemautil.ParseJsonpath(in, m)
+	ID   int  `jsonpath:"$._id"`
+	Home Team `jsonpath:"$.teams.home"`
+	Away Team `jsonpath:"$.teams.away"`
+	Date int  `jsonpath:"$._dt.uts"`
 }

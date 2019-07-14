@@ -39,7 +39,7 @@ func TestGetDetail(t *testing.T) {
 	ts := Setup(t, "details")
 	defer ts.Close()
 	f := New(ts.URL)
-	results, err := f.GetDetail(uint64(0))
+	results, err := f.GetDetail(0)
 	if err != nil {
 		t.Fatal(err)
 	}

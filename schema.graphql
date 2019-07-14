@@ -1,28 +1,47 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
-
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
-}
-
-type User {
-  id: ID!
-  name: String!
-}
-
 type Query {
-  todos: [Todo!]!
+  GetMatch(home: String, away: String): [Match]
+  GetDetail(matchID: Int!): [Detail]
 }
 
-input NewTodo {
-  text: String!
-  userId: String!
+type Value {
+  home: Int!
+  away: Int!
 }
 
-type Mutation {
-  createTodo(input: NewTodo!): Todo!
+type Match {
+	ID: Int! 
+	Home:Team!
+	Away:Team!
+	Date: Int!
+}
+
+type Team {
+	Name:String!
+	ID:Int! 
+}
+
+type Detail {
+	ID:Int!
+	Home:String!
+	Away:String!
+	Detail:Values
+}
+
+type Values {
+	BallPossession  :Value
+	GoalKicks       :Value
+	FreeKicks       :Value
+	Offsides        :Value
+	CornerKicks     :Value
+	ShotsOnTarget   :Value
+	ShotsOffTarget  :Value
+	ShotsBlocked    :Value
+	Saves           :Value
+	Fouls           :Value
+	Injuries        :Value
+	BallSafe        :Value
+	Substitutions   :Value
+	DangerousAttack :Value
+	Attack          :Value
+	GoalAttempts    :Value
 }

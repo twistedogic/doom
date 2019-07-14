@@ -1,4 +1,4 @@
-package schemautil
+package helper
 
 import (
 	"testing"

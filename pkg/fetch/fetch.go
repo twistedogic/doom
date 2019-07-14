@@ -3,9 +3,9 @@ package fetch
 import (
 	"encoding/json"
 
-	"github.com/oliveagle/jsonpath"
-	"github.com/twistedogic/doom/pkg/schema"
-	"github.com/twistedogic/doom/pkg/schema/schemautil"
+	"github.com/twistedogic/doom/pkg/helper"
+	"github.com/twistedogic/doom/pkg/jsonpath"
+	"github.com/twistedogic/doom/pkg/model"
 	"github.com/twistedogic/doom/pkg/service/radar"
 )
 
@@ -24,11 +24,11 @@ func New(u string) *Fetcher {
 }
 
 func (f *Fetcher) ExtractJsonPath(i interface{}, path string) ([][]byte, error) {
-	value, err := jsonpath.JsonPathLookup(i, path)
+	value, err := jsonpath.Lookup(path, i)
 	if err != nil {
 		return nil, err
 	}
-	values := schemautil.FlattenDeep(value)
+	values := helper.FlattenDeep(value)
 	out := make([][]byte, len(values))
 	for i, v := range values {
 		b, err := json.Marshal(v)
@@ -40,7 +40,7 @@ func (f *Fetcher) ExtractJsonPath(i interface{}, path string) ([][]byte, error) 
 	return out, nil
 }
 
-func (f *Fetcher) GetMatch(offset int) ([]schema.Match, error) {
+func (f *Fetcher) GetMatch(offset int) ([]model.Match, error) {
 	var container interface{}
 	if err := f.GetMatchFullFeed(offset, &container); err != nil {
 		return nil, err
@@ -49,27 +49,27 @@ func (f *Fetcher) GetMatch(offset int) ([]schema.Match, error) {
 	if err != nil {
 		return nil, err
 	}
-	out := make([]schema.Match, len(items))
+	out := make([]model.Match, len(items))
 	for i, item := range items {
-		if err := json.Unmarshal(item, &out[i]); err != nil {
+		if err := jsonpath.Unmarshal(item, &out[i]); err != nil {
 			return nil, err
 		}
 	}
 	return out, nil
 }
 
-func (f *Fetcher) GetDetail(matchID uint64) ([]schema.Detail, error) {
+func (f *Fetcher) GetDetail(matchID int) ([]model.Detail, error) {
 	var container interface{}
-	if err := f.GetMatchDetail(int(matchID), &container); err != nil {
+	if err := f.GetMatchDetail(matchID, &container); err != nil {
 		return nil, err
 	}
 	items, err := f.ExtractJsonPath(container, DetailPath)
 	if err != nil {
 		return nil, err
 	}
-	out := make([]schema.Detail, len(items))
+	out := make([]model.Detail, len(items))
 	for i, item := range items {
-		if err := json.Unmarshal(item, &out[i]); err != nil {
+		if err := jsonpath.Unmarshal(item, &out[i]); err != nil {
 			return nil, err
 		}
 	}

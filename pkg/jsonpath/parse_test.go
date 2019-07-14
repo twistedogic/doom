@@ -1,4 +1,4 @@
-package schemautil
+package jsonpath
 
 import (
 	"encoding/json"

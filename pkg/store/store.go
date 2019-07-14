@@ -7,6 +7,7 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/timshannon/bolthold"
+	"github.com/twistedogic/doom/pkg/helper"
 )
 
 type Store struct {
@@ -26,4 +27,14 @@ func (s *Store) UpsertItem(item interface{}) error {
 		}
 	}
 	return fmt.Errorf("no ID field found for %#v", item)
+}
+
+func (s *Store) BulkUpsert(v interface{}) error {
+	items := helper.FlattenDeep(v)
+	for _, item := range items {
+		if err := s.UpsertItem(item); err != nil {
+			return err
+		}
+	}
+	return nil
 }
