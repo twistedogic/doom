@@ -2,45 +2,10 @@ package helper
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/fatih/structs"
 )
-
-func IsIterable(v interface{}) bool {
-	rt := reflect.TypeOf(v)
-	switch rt.Kind() {
-	case reflect.Slice:
-		return true
-	case reflect.Array:
-		return true
-	default:
-		return false
-	}
-}
-
-func FlattenDeep(args ...interface{}) []interface{} {
-	list := []interface{}{}
-	for _, v := range args {
-		if IsIterable(v) {
-			for _, z := range FlattenDeep((v.([]interface{}))...) {
-				list = append(list, z)
-			}
-		} else {
-			list = append(list, v)
-		}
-	}
-	return list
-}
-
-func SetField(obj interface{}, name string, value interface{}) error {
-	field, ok := structs.New(obj).FieldOk(name)
-	if !ok {
-		return fmt.Errorf("no field %s found in %#v", name, obj)
-	}
-	return field.Set(value)
-}
 
 type Field struct {
 	Tag         string
@@ -74,4 +39,12 @@ func GetFieldName(v interface{}, tagName, tagValue string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("No field found with tag name: %s and tag value: %s", tagName, tagValue)
+}
+
+func SetField(obj interface{}, name string, value interface{}) error {
+	field, ok := structs.New(obj).FieldOk(name)
+	if !ok {
+		return fmt.Errorf("no field %s found in %#v", name, obj)
+	}
+	return field.Set(value)
 }

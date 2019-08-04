@@ -7,7 +7,7 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/timshannon/bolthold"
-	"github.com/twistedogic/doom/pkg/helper"
+	bolt "go.etcd.io/bbolt"
 )
 
 type Store struct {
@@ -23,18 +23,10 @@ func (s *Store) UpsertItem(item interface{}) error {
 	m := structs.New(item).Map()
 	for k, v := range m {
 		if strings.ToLower(k) == "id" {
-			return s.Upsert(v, item)
+			return s.Bolt().Batch(func(tx *bolt.Tx) error {
+				return s.TxUpsert(tx, v, item)
+			})
 		}
 	}
 	return fmt.Errorf("no ID field found for %#v", item)
-}
-
-func (s *Store) BulkUpsert(v interface{}) error {
-	items := helper.FlattenDeep(v)
-	for _, item := range items {
-		if err := s.UpsertItem(item); err != nil {
-			return err
-		}
-	}
-	return nil
 }

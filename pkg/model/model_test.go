@@ -8,7 +8,7 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/twistedogic/doom/pkg/helper"
-	"github.com/twistedogic/doom/pkg/jsonpath"
+	"github.com/twistedogic/jsonpath"
 )
 
 const testdataPath = "../../testdata"
@@ -62,6 +62,5 @@ func TestParseDetail(t *testing.T) {
 		if structs.IsZero(d) {
 			t.Fatalf("not parsed %#v", d)
 		}
-		t.Logf("%#v", d)
 	}
 }

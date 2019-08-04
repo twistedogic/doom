@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 
 	"github.com/twistedogic/doom/pkg/helper"
-	"github.com/twistedogic/doom/pkg/jsonpath"
 	"github.com/twistedogic/doom/pkg/model"
 	"github.com/twistedogic/doom/pkg/service/radar"
+	"github.com/twistedogic/jsonpath"
+	"go.uber.org/ratelimit"
 )
 
 const (
@@ -16,11 +17,16 @@ const (
 
 type Fetcher struct {
 	*radar.Client
+	ratelimit.Limiter
 }
 
-func New(u string) *Fetcher {
+func New(u string, rate int) *Fetcher {
 	c := radar.New(u)
-	return &Fetcher{c}
+	limiter := ratelimit.New(rate)
+	if rate == -1 {
+		limiter = ratelimit.NewUnlimited()
+	}
+	return &Fetcher{c, limiter}
 }
 
 func (f *Fetcher) ExtractJsonPath(i interface{}, path string) ([][]byte, error) {
@@ -41,6 +47,7 @@ func (f *Fetcher) ExtractJsonPath(i interface{}, path string) ([][]byte, error) 
 }
 
 func (f *Fetcher) GetMatch(offset int) ([]model.Match, error) {
+	f.Take()
 	var container interface{}
 	if err := f.GetMatchFullFeed(offset, &container); err != nil {
 		return nil, err
@@ -59,6 +66,7 @@ func (f *Fetcher) GetMatch(offset int) ([]model.Match, error) {
 }
 
 func (f *Fetcher) GetDetail(matchID int) ([]model.Detail, error) {
+	f.Take()
 	var container interface{}
 	if err := f.GetMatchDetail(matchID, &container); err != nil {
 		return nil, err

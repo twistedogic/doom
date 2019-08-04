@@ -9,7 +9,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/mitchellh/mapstructure"
 	"github.com/twistedogic/doom/pkg/helper"
-	"github.com/twistedogic/doom/pkg/jsonpath"
+	"github.com/twistedogic/jsonpath"
 )
 
 type Value struct {
@@ -84,7 +84,7 @@ func (v *Values) Parse(i interface{}) error {
 }
 
 type Detail struct {
-	ID     uint64 `jsonpath:"$._matchid"`
+	ID     int    `jsonpath:"$._matchid"`
 	Home   string `jsonpath:"$.teams.home" boltholdIndex:"Team"`
 	Away   string `jsonpath:"$.teams.away" boltholdIndex:"Team"`
 	Detail Values
