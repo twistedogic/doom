@@ -12,6 +12,14 @@ const (
 	rateLimitPerSecond = 10
 )
 
+type Target interface {
+	Write(interface{}) error
+}
+
+type Tap interface {
+	Update(Target) error
+}
+
 type App struct {
 	maxOffset int
 	store     *store.Store
