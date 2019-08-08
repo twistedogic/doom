@@ -85,8 +85,8 @@ func (v *Values) Parse(i interface{}) error {
 
 type Detail struct {
 	ID     int    `jsonpath:"$._matchid"`
-	Home   string `jsonpath:"$.teams.home" boltholdIndex:"Team"`
-	Away   string `jsonpath:"$.teams.away" boltholdIndex:"Team"`
+	Home   string `jsonpath:"$.teams.home"`
+	Away   string `jsonpath:"$.teams.away"`
 	Detail Values
 }
 
@@ -106,7 +106,7 @@ func (d *Detail) UnmarshalJSON(b []byte) error {
 }
 
 type Team struct {
-	Name string `jsonpath:"$.name" boltholdIndex:"Team"`
+	Name string `jsonpath:"$.name"`
 	ID   int    `jsonpath:"$._id"`
 }
 

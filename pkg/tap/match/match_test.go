@@ -1,4 +1,4 @@
-package tap
+package match
 
 import (
 	"io/ioutil"
@@ -8,9 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/twistedogic/doom/pkg/model"
 )
 
-const testdataPath = "../../testdata"
+const testdataPath = "../../../testdata"
 
 func SetFile(t *testing.T) (string, func()) {
 	t.Helper()
@@ -57,7 +59,16 @@ func TestUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := app.update(); err != nil {
+	if err := app.Backfill(); err != nil {
 		t.Fatal(err)
 	}
+	var d model.Detail
+	if err := app.GetLastest(&d); err != nil {
+		t.Fatal(err)
+	}
+	var m model.Match
+	if err := app.GetLastest(&m); err != nil {
+		t.Fatal(err)
+	}
+	t.Log(m)
 }

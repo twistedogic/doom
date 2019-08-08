@@ -13,12 +13,18 @@ import (
 
 const testdataPath = "../../testdata"
 
-func ReadTestdata(t *testing.T, file, pattern string) [][]byte {
+func ReadTestFile(t *testing.T, file string) []byte {
 	t.Helper()
 	b, err := ioutil.ReadFile(filepath.Join(testdataPath, file))
 	if err != nil {
 		t.Fatal(err)
 	}
+	return b
+}
+
+func ReadTestdata(t *testing.T, file, pattern string) [][]byte {
+	t.Helper()
+	b := ReadTestFile(t, file)
 	var container interface{}
 	if err := json.Unmarshal(b, &container); err != nil {
 		t.Fatal(err)
@@ -62,5 +68,21 @@ func TestParseDetail(t *testing.T) {
 		if structs.IsZero(d) {
 			t.Fatalf("not parsed %#v", d)
 		}
+	}
+}
+
+func TestParseOdd(t *testing.T) {
+	cases := []string{"fha", "hha", "had", "hft"}
+	for i := range cases {
+		name := cases[i]
+		t.Run(name, func(t *testing.T) {
+			data := ReadTestdata(t, name, "$.[*].matches.[*]")
+			for _, b := range data {
+				var o Odds
+				if err := jsonpath.Unmarshal(b, &o); err != nil {
+					t.Fatal(err)
+				}
+			}
+		})
 	}
 }

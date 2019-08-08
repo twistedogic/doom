@@ -73,10 +73,8 @@ func TestStore(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			for _, item := range tc.data {
-				if err := s.UpsertItem(item); err != nil {
-					t.Fatal(err)
-				}
+			if err := s.BulkUpsert(tc.data); err != nil {
+				t.Fatal(err)
 			}
 			got := []Item{}
 			if err := s.Find(&got, bolthold.Where(tc.field).Eq(tc.query)); err != nil {
