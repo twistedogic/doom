@@ -1,8 +1,11 @@
-package radar
+package jc
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"testing"
 )
@@ -20,6 +23,17 @@ func Write(t *testing.T, filePath string, value interface{}) {
 	}
 }
 
+func Setup(t *testing.T, file string) *httptest.Server {
+	t.Helper()
+	b, err := ioutil.ReadFile(filepath.Join(testdataPath, file))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.Write(b)
+	}))
+}
+
 func TestClient(t *testing.T) {
 	t.Skip()
 	client := New(JcURL)
@@ -34,5 +48,18 @@ func TestClient(t *testing.T) {
 				Write(t, filepath.Join(testdataPath, name), out)
 			}
 		})
+	}
+}
+
+func TestGetOdds(t *testing.T) {
+	ts := Setup(t, "fha")
+	defer ts.Close()
+	client := New(fmt.Sprintf("%s/%s", ts.URL, "%s"))
+	results, err := client.GetOdds()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) == 0 {
+		t.Fail()
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/fatih/structs"
 	"github.com/timshannon/bolthold"
@@ -11,31 +12,43 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-type Store struct {
+const timestampKey = "lastupdate"
+
+type Timestamp struct {
+	Unix int64
+}
+
+type BoltStore struct {
 	*bolthold.Store
 }
 
-func New(filename string) (*Store, error) {
+func New(filename string) (*BoltStore, error) {
 	store, err := bolthold.Open(filename, os.ModePerm, nil)
-	return &Store{store}, err
+	return &BoltStore{store}, err
 }
 
-func (s *Store) UpsertItem(item interface{}) error {
+func (s *BoltStore) UpdateTimestamp() error {
+	now := Timestamp{time.Now().Unix()}
+	return s.Bolt().Batch(func(tx *bolt.Tx) error {
+		return s.TxUpsert(tx, timestampKey, now)
+	})
+}
+
+func (s *BoltStore) UpsertItem(item interface{}) error {
+	defer s.UpdateTimestamp()
 	i := structs.New(item)
 	m := i.Map()
-	typeName := i.Name()
 	for k, v := range m {
 		if strings.ToLower(k) == "id" {
-			val := fmt.Sprintf("%s-%v", typeName, v)
 			return s.Bolt().Batch(func(tx *bolt.Tx) error {
-				return s.TxUpsert(tx, val, item)
+				return s.TxUpsert(tx, v, item)
 			})
 		}
 	}
 	return fmt.Errorf("no ID field found for %#v", item)
 }
 
-func (s *Store) BulkUpsert(i interface{}) error {
+func (s *BoltStore) BulkUpsert(i interface{}) error {
 	items, ok := helper.InterfaceToSlice(i)
 	if !ok {
 		return fmt.Errorf("%#v is not slice", i)
@@ -49,4 +62,10 @@ func (s *Store) BulkUpsert(i interface{}) error {
 		}()
 	}
 	return loop.Wait()
+}
+
+func (s *BoltStore) GetLastUpdate() time.Time {
+	var ts Timestamp
+	s.Get(timestampKey, &ts)
+	return time.Unix(ts.Unix, int64(0))
 }

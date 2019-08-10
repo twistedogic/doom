@@ -1,5 +1,11 @@
 package target
 
+import (
+	"time"
+)
+
 type Target interface {
-	Write(interface{}) error
+	UpsertItem(interface{}) error
+	BulkUpsert(interface{}) error
+	GetLastUpdate() time.Time
 }

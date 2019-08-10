@@ -1,4 +1,4 @@
-package client
+package helper
 
 import (
 	"net/http"
@@ -43,5 +43,23 @@ func TestGetJSON(t *testing.T) {
 				t.Errorf("want %#v got %#v", tc.expect, out)
 			}
 		})
+	}
+}
+
+func TestExtractJsonPath(t *testing.T) {
+	path := "$.name"
+	input := map[string]string{
+		"name": "test",
+	}
+	want := [][]byte{[]byte(`"test"`)}
+	got, err := ExtractJsonPath(input, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(got, want) {
+		for _, item := range got {
+			t.Logf("%s", item)
+		}
+		t.Errorf("want %#v got %#v", want, got)
 	}
 }
