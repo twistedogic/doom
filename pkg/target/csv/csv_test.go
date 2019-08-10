@@ -22,7 +22,7 @@ func TestMarshal(t *testing.T) {
 		expect := "name,value\ntest,1\ntest,1\ntest,1\n"
 		buf := &bytes.Buffer{}
 		w := csv.NewWriter(buf)
-		if err := Marshal(w, input); err != nil {
+		if err := Marshal(w, input, true); err != nil {
 			t.Fatal(err)
 		}
 		output := buf.String()

@@ -32,13 +32,13 @@ func newRow(m map[string]string) Row {
 	return Row{header, values}
 }
 
+func marshalHeader(w *csv.Writer, row Row) error {
+	return w.Write(row.Header)
+}
+
 func marshal(w *csv.Writer, rows []Row) error {
 	if len(rows) == 0 {
 		return fmt.Errorf("rows is empty")
-	}
-	header := rows[0].Header
-	if err := w.Write(header); err != nil {
-		return err
 	}
 	for _, r := range rows {
 		if err := w.Write(r.Values); err != nil {
@@ -49,7 +49,7 @@ func marshal(w *csv.Writer, rows []Row) error {
 	return w.Error()
 }
 
-func Marshal(w *csv.Writer, i interface{}) error {
+func Marshal(w *csv.Writer, i interface{}, withHeader bool) error {
 	rowMaps := []map[string]string{}
 	if val, ok := helper.InterfaceToSlice(i); ok {
 		for _, v := range val {
@@ -66,6 +66,11 @@ func Marshal(w *csv.Writer, i interface{}) error {
 	rows := make([]Row, len(rowMaps))
 	for j, m := range rowMaps {
 		rows[j] = newRow(m)
+	}
+	if withHeader {
+		if err := marshalHeader(w, rows[0]); err != nil {
+			return err
+		}
 	}
 	return marshal(w, rows)
 }

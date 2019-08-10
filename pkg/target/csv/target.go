@@ -33,7 +33,10 @@ func New(filename string) (*Target, error) {
 }
 
 func (t *Target) UpsertItem(i interface{}) error {
-	return Marshal(t.writer, i)
+	if t.info.Size() == 0 {
+		return Marshal(t.writer, i, true)
+	}
+	return Marshal(t.writer, i, false)
 }
 
 func (t *Target) BulkUpsert(i interface{}) error {

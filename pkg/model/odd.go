@@ -18,15 +18,15 @@ type Odd struct {
 	ID         string
 	OfficialID string `jsonpath:"$.matchIDinofficial"`
 	OddID      string
-	MatchID    string `jsonpath:"$.matchID"`
-	RaderID    string `jsonpath:"$.liveEvent.matchIDbetradar"`
-	Home       string `jsonpath:"$.homeTeam.teamNameEN"`
-	Away       string `jsonpath:"$.awayTeam.teamNameEN"`
-	League     string `jsonpath:"$.league.leagueNameEN"`
-	Type       string
-	Outcome    string
-	MinBet     float64
-	Odd        float64
+	MatchID    string  `jsonpath:"$.matchID"`
+	RaderID    string  `jsonpath:"$.liveEvent.matchIDbetradar" prometheus:"radar"`
+	Home       string  `jsonpath:"$.homeTeam.teamNameEN" prometheus:"home"`
+	Away       string  `jsonpath:"$.awayTeam.teamNameEN" prometheus:"away"`
+	League     string  `jsonpath:"$.league.leagueNameEN"`
+	Type       string  `prometheus:"type"`
+	Outcome    string  `prometheus:"outcome"`
+	MinBet     float64 `prometheus:"minbet"`
+	Odd        float64 `prometheus:",value"`
 	MatchTime  time.Time
 	LastUpdate time.Time
 }
