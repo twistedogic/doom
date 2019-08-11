@@ -14,6 +14,7 @@ require (
 	github.com/timshannon/bolthold v0.0.0-20190715185903-b73eaf0ecf37
 	github.com/twistedogic/jsonpath v0.0.0-20190721104144-ea2b063cd8af
 	github.com/uber-go/atomic v1.4.0 // indirect
+	github.com/urfave/cli v1.21.0
 	go.etcd.io/bbolt v1.3.3
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/ratelimit v0.0.0-20180316092928-c15da0234277
