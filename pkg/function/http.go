@@ -12,7 +12,7 @@ import (
 )
 
 func OddHTTP(w http.ResponseWriter, r *http.Request) {
-	tap := jc.New(jc.JcURL)
+	tap := jc.New(jc.JcURL, -1)
 	target, err := prom.New(model.Odd{})
 	if err != nil {
 		log.Print(err)

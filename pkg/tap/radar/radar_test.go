@@ -35,7 +35,7 @@ func Write(t *testing.T, filePath string, value interface{}) {
 
 func TestClient(t *testing.T) {
 	t.Skip()
-	client := New(RadarURL)
+	client := New(RadarURL, -1)
 	var out interface{}
 	if err := client.GetMatchFullFeed(0, &out); err != nil {
 		t.Fatal(err)
@@ -62,7 +62,7 @@ func TestClient(t *testing.T) {
 func TestGetMatch(t *testing.T) {
 	ts := Setup(t, "fullfeed")
 	defer ts.Close()
-	f := New(ts.URL)
+	f := New(ts.URL, -1)
 	results, err := f.GetMatch(0)
 	if err != nil {
 		t.Fatal(err)
@@ -75,7 +75,7 @@ func TestGetMatch(t *testing.T) {
 func TestGetDetail(t *testing.T) {
 	ts := Setup(t, "details")
 	defer ts.Close()
-	f := New(ts.URL)
+	f := New(ts.URL, -1)
 	results, err := f.GetDetail(0)
 	if err != nil {
 		t.Fatal(err)

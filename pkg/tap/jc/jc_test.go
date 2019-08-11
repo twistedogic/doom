@@ -36,7 +36,7 @@ func Setup(t *testing.T, file string) *httptest.Server {
 
 func TestClient(t *testing.T) {
 	t.Skip()
-	client := New(JcURL)
+	client := New(JcURL, -1)
 	cases := []string{"fha", "hha", "had", "hft"}
 	for i := range cases {
 		name := cases[i]
@@ -54,7 +54,8 @@ func TestClient(t *testing.T) {
 func TestGetOdds(t *testing.T) {
 	ts := Setup(t, "fha")
 	defer ts.Close()
-	client := New(fmt.Sprintf("%s/%s", ts.URL, "%s"))
+	u := fmt.Sprintf("%s/%s", ts.URL, "%s")
+	client := New(u, -1)
 	results, err := client.GetOdds()
 	if err != nil {
 		t.Fatal(err)

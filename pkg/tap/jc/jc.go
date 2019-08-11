@@ -23,11 +23,8 @@ type Client struct {
 	BaseURL string
 }
 
-func New(u string, rate ...int) *Client {
-	limiter := ratelimit.NewUnlimited()
-	if len(rate) != 0 {
-		limiter = ratelimit.New(rate[0])
-	}
+func New(u string, rate int) *Client {
+	limiter := helper.NewLimiter(rate)
 	return &Client{limiter, u}
 }
 

@@ -5,7 +5,15 @@ import (
 	"net/http"
 
 	"github.com/twistedogic/jsonpath"
+	"go.uber.org/ratelimit"
 )
+
+func NewLimiter(rate int) ratelimit.Limiter {
+	if rate > 0 {
+		return ratelimit.New(rate)
+	}
+	return ratelimit.NewUnlimited()
+}
 
 func GetJSON(u string, value interface{}) error {
 	res, err := http.Get(u)
