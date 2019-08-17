@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/fatih/structs"
+	"github.com/google/go-cmp/cmp"
 	"github.com/twistedogic/doom/pkg/helper"
 	"github.com/twistedogic/jsonpath"
 )
@@ -50,10 +51,24 @@ func TestParseMatch(t *testing.T) {
 	for _, b := range data {
 		var m Match
 		if err := jsonpath.Unmarshal(b, &m); err != nil {
-			t.Fatal(err)
+			t.Log(err)
 		}
 		if structs.IsZero(m) {
 			t.Fatalf("not parsed %#v", m)
+		}
+		if m.ID == 0 {
+			t.Fatal(m)
+		}
+		result := m.HalfTime
+		switch {
+		case !structs.IsZero(m.OverTime):
+			result = m.OverTime
+		case !structs.IsZero(m.FullTime):
+			result = m.FullTime
+		}
+		if diff := cmp.Diff(m.Result, result); diff != "" {
+			t.Logf("%s", b)
+			t.Fatal(diff)
 		}
 	}
 }
@@ -68,21 +83,5 @@ func TestParseDetail(t *testing.T) {
 		if structs.IsZero(d) {
 			t.Fatalf("not parsed %#v", d)
 		}
-	}
-}
-
-func TestParseOdd(t *testing.T) {
-	cases := []string{"fha", "hha", "had", "hft"}
-	for i := range cases {
-		name := cases[i]
-		t.Run(name, func(t *testing.T) {
-			data := ReadTestdata(t, name, "$.[*].matches.[*]")
-			for _, b := range data {
-				var o Odds
-				if err := jsonpath.Unmarshal(b, &o); err != nil {
-					t.Fatal(err)
-				}
-			}
-		})
 	}
 }

@@ -33,7 +33,7 @@ type Odd struct {
 
 type Odds []Odd
 
-func (o *Odds) UnmarshalJSON(b []byte) error {
+func (o *Odds) UnmarshalJSONPath(b []byte) error {
 	var in interface{}
 	if err := json.Unmarshal(b, &in); err != nil {
 		return err

@@ -2,6 +2,7 @@ package radar
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/twistedogic/doom/pkg/helper"
 	"github.com/twistedogic/doom/pkg/model"
@@ -87,21 +88,61 @@ func (c *Client) GetDetail(matchID int) ([]model.Detail, error) {
 	return out, nil
 }
 
-func (c *Client) Update(t target.Target) error {
-	for offset := 0; offset >= maxOffset; offset-- {
-		items, err := c.GetMatch(offset)
+func (c *Client) FetchMatch(offset int, matchCh chan model.Match) error {
+	items, err := c.GetMatch(offset)
+	if err != nil {
+		return err
+	}
+	for _, item := range items {
+		if item.IsFinish() {
+			matchCh <- item
+		}
+	}
+	return nil
+}
+
+func (c *Client) FetchDetail(matchCh chan model.Match, detailCh chan model.MatchDetail) error {
+	for match := range matchCh {
+		details, err := c.GetDetail(match.ID)
 		if err != nil {
 			return err
 		}
-		for i := range items {
-			id := items[i].ID
-			details, err := c.GetDetail(id)
-			if err != nil {
-				return err
+		for _, detail := range details {
+			detailCh <- model.MatchDetail{match, detail}
+		}
+	}
+	return nil
+}
+
+func (c *Client) Update(t target.Target) error {
+	wg := &sync.WaitGroup{}
+	matchCh := make(chan model.Match)
+	detailCh := make(chan model.MatchDetail)
+	errCh := make(chan error)
+	for offset := 0; offset >= maxOffset; offset-- {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			if err := c.FetchMatch(i, matchCh); err != nil {
+				errCh <- err
 			}
-			if err := t.BulkUpsert(details); err != nil {
-				return err
+		}(offset)
+	}
+	go func() {
+		wg.Wait()
+		close(matchCh)
+	}()
+	go func() {
+		errCh <- c.FetchDetail(matchCh, detailCh)
+	}()
+	for {
+		select {
+		case d := <-detailCh:
+			if err := t.UpsertItem(d); err != nil {
+				errCh <- err
 			}
+		case err := <-errCh:
+			return err
 		}
 	}
 	return nil

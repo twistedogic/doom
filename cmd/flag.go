@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/twistedogic/doom/pkg/schedule/job"
@@ -63,6 +64,7 @@ func Run() cli.Command {
 		default:
 			return fmt.Errorf("invalid target option: %s", targetFlag)
 		}
+		log.Println("Running pipeline...")
 		return j.Run()
 	}
 	return cli.Command{

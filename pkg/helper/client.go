@@ -2,6 +2,8 @@ package helper
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/twistedogic/jsonpath"
@@ -18,10 +20,20 @@ func NewLimiter(rate int) ratelimit.Limiter {
 func GetJSON(u string, value interface{}) error {
 	res, err := http.Get(u)
 	if err != nil {
+		log.Printf("ERROR GET %s %s", u, err)
 		return err
 	}
 	defer res.Body.Close()
-	return json.NewDecoder(res.Body).Decode(value)
+	b, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Printf("ERROR GET %s %s", u, err)
+		return err
+	}
+	if err := json.Unmarshal(b, value); err != nil {
+		log.Printf("ERROR GET %s %s", u, err)
+		return err
+	}
+	return nil
 }
 
 func ExtractJsonPath(i interface{}, path string) ([][]byte, error) {

@@ -11,8 +11,10 @@ import (
 	"github.com/twistedogic/doom/pkg/target/prom"
 )
 
+var DefaultURL = jc.JcURL
+
 func OddHTTP(w http.ResponseWriter, r *http.Request) {
-	tap := jc.New(jc.JcURL, -1)
+	tap := jc.New(DefaultURL, -1)
 	target, err := prom.New(model.Odd{})
 	if err != nil {
 		log.Print(err)
