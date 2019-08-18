@@ -3,6 +3,7 @@ module github.com/twistedogic/doom
 go 1.12
 
 require (
+	github.com/alecthomas/jsonschema v0.0.0-20190626084004-00dfc6288dec
 	github.com/fatih/structs v1.1.0
 	github.com/google/go-cmp v0.3.1
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
