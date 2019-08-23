@@ -10,7 +10,7 @@ import (
 
 const metricTag = "prometheus"
 
-func SetMetric(i interface{}) (*prometheus.GaugeVec, error) {
+func SetMetric(i interface{}, reg *prometheus.Registry) (*prometheus.GaugeVec, error) {
 	name := structs.Name(i)
 	labelMap, _ := GetMetric(i)
 	labels := make([]string, 0, len(labelMap))
@@ -24,7 +24,10 @@ func SetMetric(i interface{}) (*prometheus.GaugeVec, error) {
 		},
 		labels,
 	)
-	return metric, prometheus.Register(metric)
+	if err := reg.Register(metric); err != nil {
+		return nil, err
+	}
+	return metric, nil
 }
 
 func GetMetric(i interface{}) (map[string]string, float64) {

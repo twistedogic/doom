@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type testMetric struct {
@@ -29,7 +30,8 @@ func TestGetMetric(t *testing.T) {
 }
 
 func TestSetMetric(t *testing.T) {
-	if _, err := SetMetric(testMetric{}); err != nil {
+	reg := prometheus.NewRegistry()
+	if _, err := SetMetric(testMetric{}, reg); err != nil {
 		t.Fatal(err)
 	}
 }

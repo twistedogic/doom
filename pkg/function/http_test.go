@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/twistedogic/doom/pkg/model"
 )
 
 const testdataPath = "../../testdata"
@@ -42,10 +44,16 @@ func TestOddHandler(t *testing.T) {
 	ts := Setup(t, testdataPath)
 	defer ts.Close()
 	DefaultURL = fmt.Sprintf("%s/%s", ts.URL, "%s")
-	handler := OddHTTP
+	o, err := New(&model.Odd{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	handler := o.ServeHTTP
 	req := httptest.NewRequest("GET", "http://localhost", nil)
 	w := httptest.NewRecorder()
-	handler(w, req)
+	for i := 0; i < 3; i++ {
+		handler(w, req)
+	}
 	resp := w.Result()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

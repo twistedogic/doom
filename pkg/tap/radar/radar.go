@@ -2,6 +2,7 @@ package radar
 
 import (
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/twistedogic/doom/pkg/helper"
@@ -93,6 +94,7 @@ func (c *Client) FetchMatch(offset int, matchCh chan model.Match) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("%d matches for %d", len(items), offset)
 	for _, item := range items {
 		if item.IsFinish() {
 			matchCh <- item
@@ -135,11 +137,16 @@ func (c *Client) Update(t target.Target) error {
 	go func() {
 		errCh <- c.FetchDetail(matchCh, detailCh)
 	}()
+	var written int
 	for {
 		select {
 		case d := <-detailCh:
 			if err := t.UpsertItem(d); err != nil {
 				errCh <- err
+			}
+			written += 1
+			if written%100 == 0 {
+				log.Printf("%d records written", written)
 			}
 		case err := <-errCh:
 			return err

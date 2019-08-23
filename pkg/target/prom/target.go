@@ -12,8 +12,8 @@ type Target struct {
 	lastupdate time.Time
 }
 
-func New(i interface{}) (*Target, error) {
-	metric, err := SetMetric(i)
+func New(i interface{}, reg *prometheus.Registry) (*Target, error) {
+	metric, err := SetMetric(i, reg)
 	if err != nil {
 		return nil, err
 	}

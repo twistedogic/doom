@@ -5,9 +5,12 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/twistedogic/doom/pkg/model"
+	"github.com/twistedogic/doom/pkg/tap"
 	"github.com/twistedogic/doom/pkg/tap/jc"
+	"github.com/twistedogic/doom/pkg/target"
 	"github.com/twistedogic/doom/pkg/target/prom"
 )
 
@@ -16,18 +19,28 @@ var (
 	DefaultRate = -1
 )
 
-func OddHTTP(w http.ResponseWriter, r *http.Request) {
-	tap := jc.New(DefaultURL, DefaultRate)
-	target, err := prom.New(model.Odd{})
+type OddHTTP struct {
+	target  target.Target
+	tap     tap.Tap
+	Handler http.Handler
+}
+
+func New(i interface{}) (*OddHTTP, error) {
+	reg := prometheus.NewRegistry()
+	target, err := prom.New(model.Odd{}, reg)
 	if err != nil {
+		return nil, err
+	}
+	tap := jc.New(DefaultURL, DefaultRate)
+	handler := promhttp.HandlerFor(reg, promhttp.HandlerOpts{})
+	return &OddHTTP{target, tap, handler}, nil
+}
+
+func (o *OddHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if err := o.tap.Update(o.target); err != nil {
 		log.Print(err)
 		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
 		return
 	}
-	if err := tap.Update(target); err != nil {
-		log.Print(err)
-		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
-		return
-	}
-	promhttp.Handler().ServeHTTP(w, r)
+	o.Handler.ServeHTTP(w, r)
 }
