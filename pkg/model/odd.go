@@ -1,12 +1,12 @@
 package model
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
+	json "github.com/json-iterator/go"
 	"github.com/twistedogic/jsonpath"
 )
 

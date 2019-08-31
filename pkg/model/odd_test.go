@@ -1,8 +1,9 @@
 package model
 
 import (
-	"github.com/twistedogic/jsonpath"
 	"testing"
+
+	"github.com/twistedogic/jsonpath"
 )
 
 func TestParseOdd(t *testing.T) {

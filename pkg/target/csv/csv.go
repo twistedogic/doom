@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/twistedogic/doom/pkg/helper"
+	"github.com/twistedogic/doom/pkg/helper/flatten"
 )
 
 var DefaultKeyDelimiter string = "_"
@@ -51,17 +51,17 @@ func marshal(w *csv.Writer, rows []Row) error {
 
 func Marshal(w *csv.Writer, i interface{}, withHeader bool) error {
 	rowMaps := []map[string]string{}
-	if val, ok := helper.InterfaceToSlice(i); ok {
+	if val, ok := flatten.InterfaceToSlice(i); ok {
 		for _, v := range val {
 			switch t := v.(type) {
 			case Marshaler:
 				rowMaps = append(rowMaps, t.MarshalCSV())
 			default:
-				rowMaps = append(rowMaps, helper.FlattenKey(t, DefaultKeyDelimiter)...)
+				rowMaps = append(rowMaps, flatten.FlattenKey(t, DefaultKeyDelimiter)...)
 			}
 		}
 	} else {
-		rowMaps = helper.FlattenKey(i, DefaultKeyDelimiter)
+		rowMaps = flatten.FlattenKey(i, DefaultKeyDelimiter)
 	}
 	rows := make([]Row, len(rowMaps))
 	for j, m := range rowMaps {

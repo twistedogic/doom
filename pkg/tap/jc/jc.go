@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/twistedogic/doom/pkg/helper"
+	"github.com/twistedogic/doom/pkg/helper/client"
 	"github.com/twistedogic/doom/pkg/model"
 	"github.com/twistedogic/doom/pkg/target"
 	"github.com/twistedogic/jsonpath"
-	"go.uber.org/ratelimit"
 )
 
 const (
@@ -19,19 +18,17 @@ const (
 var BetTypes = []string{"had", "fha", "hha", "hft"}
 
 type Client struct {
-	ratelimit.Limiter
-	BaseURL string
+	*client.Client
 }
 
 func New(u string, rate int) *Client {
-	limiter := helper.NewLimiter(rate)
-	return &Client{limiter, u}
+	c := client.New(u, rate)
+	return &Client{c}
 }
 
 func (c *Client) GetOdd(oddType string, value interface{}) error {
-	c.Take()
 	u := fmt.Sprintf(c.BaseURL, oddType)
-	return helper.GetJSON(u, value)
+	return c.GetJSON(u, value)
 }
 
 func (c *Client) getOdd(betType string) ([]model.Odd, error) {
@@ -39,7 +36,7 @@ func (c *Client) getOdd(betType string) ([]model.Odd, error) {
 	if err := c.GetOdd(betType, &container); err != nil {
 		return nil, err
 	}
-	items, err := helper.ExtractJsonPath(container, OddPath)
+	items, err := client.ExtractJsonPath(container, OddPath)
 	if err != nil {
 		return nil, err
 	}

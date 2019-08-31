@@ -42,7 +42,7 @@ var (
 	}
 )
 
-func Run() cli.Command {
+func New() cli.Command {
 	run := func(c *cli.Context) error {
 		j := job.New()
 		switch tapFlag {
@@ -65,7 +65,7 @@ func Run() cli.Command {
 			return fmt.Errorf("invalid target option: %s", targetFlag)
 		}
 		log.Println("Running pipeline...")
-		return j.Run()
+		return j.Execute()
 	}
 	return cli.Command{
 		Name:   "run",

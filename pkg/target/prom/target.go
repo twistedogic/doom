@@ -1,10 +1,12 @@
 package prom
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/twistedogic/doom/pkg/helper"
+	"github.com/twistedogic/doom/pkg/config"
+	"github.com/twistedogic/doom/pkg/helper/flatten"
 )
 
 type Target struct {
@@ -20,13 +22,17 @@ func New(i interface{}, reg *prometheus.Registry) (*Target, error) {
 	return &Target{metric: metric}, nil
 }
 
+func (t *Target) Load(s config.Setting) error {
+	return fmt.Errorf("prom is long running service")
+}
+
 func (t *Target) UpsertItem(i interface{}) error {
 	t.lastupdate = time.Now()
 	return Update(t.metric, i)
 }
 
 func (t *Target) BulkUpsert(i interface{}) error {
-	items, ok := helper.InterfaceToSlice(i)
+	items, ok := flatten.InterfaceToSlice(i)
 	if !ok {
 		return t.UpsertItem(i)
 	}

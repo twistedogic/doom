@@ -34,7 +34,7 @@ var (
 	}
 )
 
-func Run() cli.Command {
+func New() cli.Command {
 	run := func(c *cli.Context) error {
 		handler, err := function.New(&model.Odd{})
 		if err != nil {

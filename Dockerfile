@@ -8,5 +8,5 @@ RUN go build -o goapp
 FROM alpine
 WORKDIR /app
 RUN apk add --no-cache curl
-COPY --from=build-env /workspace/cmd/goapp /app/
+COPY --from=build-env /workspace/goapp /app/
 ENTRYPOINT ./goapp

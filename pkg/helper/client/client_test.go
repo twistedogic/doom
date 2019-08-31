@@ -1,11 +1,13 @@
-package helper
+package client
 
 import (
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/twistedogic/doom/pkg/config"
 )
 
 func Setup(t *testing.T, payload []byte) *httptest.Server {
@@ -61,5 +63,23 @@ func TestExtractJsonPath(t *testing.T) {
 			t.Logf("%s", item)
 		}
 		t.Errorf("want %#v got %#v", want, got)
+	}
+}
+
+func TestLoad(t *testing.T) {
+	got := &Client{}
+	input := config.Setting{
+		Name: "test",
+		Config: map[string]string{
+			"baseurl": "test",
+			"rate":    "10",
+		},
+	}
+	want := New("test", 10)
+	if err := got.Load(input); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(want, got) {
+		t.Fatalf("want: %#v, got: %#v", want, got)
 	}
 }

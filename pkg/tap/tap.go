@@ -6,10 +6,12 @@ import (
 
 	"github.com/alecthomas/jsonschema"
 	"github.com/fatih/structs"
+	"github.com/twistedogic/doom/pkg/config"
 	"github.com/twistedogic/doom/pkg/target"
 )
 
 type Tap interface {
+	Load(config.Setting) error
 	Update(target.Target) error
 }
 

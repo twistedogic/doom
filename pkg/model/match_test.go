@@ -8,7 +8,7 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/google/go-cmp/cmp"
-	"github.com/twistedogic/doom/pkg/helper"
+	"github.com/twistedogic/doom/pkg/helper/flatten"
 	"github.com/twistedogic/jsonpath"
 )
 
@@ -34,7 +34,7 @@ func ReadTestdata(t *testing.T, file, pattern string) [][]byte {
 	if err != nil {
 		t.Fatal(err)
 	}
-	values := helper.FlattenDeep(value)
+	values := flatten.FlattenDeep(value)
 	out := make([][]byte, len(values))
 	for i, v := range values {
 		b, err := json.Marshal(v)

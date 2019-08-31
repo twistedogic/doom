@@ -9,7 +9,7 @@ import (
 	"github.com/iancoleman/strcase"
 	json "github.com/json-iterator/go"
 	"github.com/mitchellh/mapstructure"
-	"github.com/twistedogic/doom/pkg/helper"
+	"github.com/twistedogic/doom/pkg/helper/tag"
 	"github.com/twistedogic/jsonpath"
 )
 
@@ -101,7 +101,7 @@ func (d *Detail) Parse(i interface{}) error {
 				if err := ParseValue(val.Value, &value); err != nil {
 					return err
 				}
-				if err := helper.SetField(d, name, value); err != nil {
+				if err := tag.SetField(d, name, value); err != nil {
 					return err
 				}
 			}

@@ -5,11 +5,10 @@ import (
 	"log"
 	"sync"
 
-	"github.com/twistedogic/doom/pkg/helper"
+	"github.com/twistedogic/doom/pkg/helper/client"
 	"github.com/twistedogic/doom/pkg/model"
 	"github.com/twistedogic/doom/pkg/target"
 	"github.com/twistedogic/jsonpath"
-	"go.uber.org/ratelimit"
 )
 
 const (
@@ -20,37 +19,32 @@ const (
 )
 
 type Client struct {
-	ratelimit.Limiter
-	BaseURL string
+	*client.Client
 }
 
 func New(u string, rate int) *Client {
-	limiter := helper.NewLimiter(rate)
-	return &Client{limiter, u}
+	c := client.New(u, rate)
+	return &Client{c}
 }
 
 func (c *Client) GetMatchFullFeed(offset int, value interface{}) error {
-	c.Take()
 	u := fmt.Sprintf("%s/Asia:Shanghai/gismo/event_fullfeed/%d/55", c.BaseURL, offset)
-	return helper.GetJSON(u, value)
+	return c.GetJSON(u, value)
 }
 
 func (c *Client) GetMatchDetail(matchID int, value interface{}) error {
-	c.Take()
 	u := fmt.Sprintf("%s/Etc:UTC/gismo/match_details/%d", c.BaseURL, matchID)
-	return helper.GetJSON(u, value)
+	return c.GetJSON(u, value)
 }
 
 func (c *Client) GetLastMatches(teamID int, value interface{}) error {
-	c.Take()
 	u := fmt.Sprintf("%s/Etc:UTC/gismo/stats_team_lastx/%d/5", c.BaseURL, teamID)
-	return helper.GetJSON(u, value)
+	return c.GetJSON(u, value)
 }
 
 func (c *Client) GetBet(offset int, value interface{}) error {
-	c.Take()
 	u := fmt.Sprintf("%s/Asia:Shanghai/gismo/bet_get/hkjc/%d", c.BaseURL, offset)
-	return helper.GetJSON(u, value)
+	return c.GetJSON(u, value)
 }
 
 func (c *Client) GetMatch(offset int) ([]model.Match, error) {
@@ -58,7 +52,7 @@ func (c *Client) GetMatch(offset int) ([]model.Match, error) {
 	if err := c.GetMatchFullFeed(offset, &container); err != nil {
 		return nil, err
 	}
-	items, err := helper.ExtractJsonPath(container, MatchPath)
+	items, err := client.ExtractJsonPath(container, MatchPath)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +70,7 @@ func (c *Client) GetDetail(matchID int) ([]model.Detail, error) {
 	if err := c.GetMatchDetail(matchID, &container); err != nil {
 		return nil, err
 	}
-	items, err := helper.ExtractJsonPath(container, DetailPath)
+	items, err := client.ExtractJsonPath(container, DetailPath)
 	if err != nil {
 		return nil, err
 	}

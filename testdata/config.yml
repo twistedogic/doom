@@ -1,0 +1,11 @@
+tasks:
+  - tap:
+      name: jc
+      config:
+        baseurl: "https://bet.hkjc.com/football/getJSON.aspx?jsontype=odds_%s.aspx"
+        rate: 10
+    target:
+      name: ndjson
+      config:
+        path: jc.ndjson
+    schedule: "10 * * * * *"

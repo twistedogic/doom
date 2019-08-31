@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/twistedogic/doom/pkg/config"
 	"github.com/twistedogic/doom/pkg/target"
 )
 
@@ -16,6 +17,7 @@ func NewMockTarget(t *testing.T) mockTarget {
 	return mockTarget{t}
 }
 
+func (m mockTarget) Load(config.Setting) error    { return nil }
 func (m mockTarget) UpsertItem(interface{}) error { return nil }
 func (m mockTarget) BulkUpsert(interface{}) error { return nil }
 func (m mockTarget) GetLastUpdate() time.Time     { return time.Now() }
@@ -29,6 +31,7 @@ func NewMockTap(t *testing.T) mockTap {
 	return mockTap{t}
 }
 
+func (m mockTap) Load(config.Setting) error  { return nil }
 func (m mockTap) Update(target.Target) error { return nil }
 
 func TestJob(t *testing.T) {
@@ -36,7 +39,7 @@ func TestJob(t *testing.T) {
 	dst := NewMockTarget(t)
 	job := New()
 	job.Set(src, dst)
-	if err := job.Run(); err != nil {
+	if err := job.Execute(); err != nil {
 		t.Fatal(err)
 	}
 }

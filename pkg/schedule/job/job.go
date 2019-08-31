@@ -3,6 +3,7 @@ package job
 import (
 	"log"
 
+	"github.com/fatih/structs"
 	"github.com/twistedogic/doom/pkg/tap"
 	"github.com/twistedogic/doom/pkg/target"
 )
@@ -29,16 +30,14 @@ func (j *Job) SetDst(dst target.Target) {
 	j.Dst = dst
 }
 
-func (j *Job) Run() error {
+func (j *Job) Execute() error {
 	return j.Src.Update(j.Dst)
 }
 
-func (j *Job) ToFunc() func() {
-	return func() {
-		if err := j.Run(); err != nil {
-			log.Println(err)
-			return
-		}
-		log.Println("Done")
+func (j *Job) Run() {
+	if err := j.Execute(); err != nil {
+		log.Println(err)
+		return
 	}
+	log.Printf("Done tap: %s, target: %s", structs.Name(j.Src), structs.Name(j.Dst))
 }

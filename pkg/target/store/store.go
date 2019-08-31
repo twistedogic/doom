@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/fatih/structs"
 	"github.com/timshannon/bolthold"
-	"github.com/twistedogic/doom/pkg/helper"
+	"github.com/twistedogic/doom/pkg/helper/flatten"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -49,19 +50,27 @@ func (s *BoltStore) UpsertItem(item interface{}) error {
 }
 
 func (s *BoltStore) BulkUpsert(i interface{}) error {
-	items, ok := helper.InterfaceToSlice(i)
+	wg := &sync.WaitGroup{}
+	items, ok := flatten.InterfaceToSlice(i)
 	if !ok {
 		return fmt.Errorf("%#v is not slice", i)
 	}
-	loop := helper.NewLoop(-1)
+	errCh := make(chan error)
 	for j := range items {
 		item := items[j]
-		loop.Add(1)
+		wg.Add(1)
 		go func() {
-			loop.Done(s.UpsertItem(item))
+			defer wg.Done()
+			if err := s.UpsertItem(item); err != nil {
+				errCh <- err
+			}
 		}()
 	}
-	return loop.Wait()
+	go func() {
+		wg.Wait()
+		errCh <- nil
+	}()
+	return <-errCh
 }
 
 func (s *BoltStore) GetLastUpdate() time.Time {
