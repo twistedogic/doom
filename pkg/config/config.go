@@ -1,7 +1,7 @@
 package config
 
 import (
-	"io"
+	"os"
 
 	"github.com/mitchellh/mapstructure"
 	"gopkg.in/yaml.v2"
@@ -12,9 +12,11 @@ type Config struct {
 }
 
 type Task struct {
+	Name     string  `yaml:"name"`
 	Tap      Setting `yaml:"tap"`
 	Target   Setting `yaml:"target"`
 	Schedule string  `yaml:"schedule"`
+	Timeout  string  `yaml:"timeout"`
 }
 
 type Setting struct {
@@ -32,10 +34,15 @@ func New(b []byte) (Config, error) {
 	return c, err
 }
 
-func Load(r io.Reader) (Config, error) {
+func Load(filename string) (Config, error) {
 	var c Config
-	decoder := yaml.NewDecoder(r)
+	f, err := os.Open(filename)
+	if err != nil {
+		return c, err
+	}
+	defer f.Close()
+	decoder := yaml.NewDecoder(f)
 	decoder.SetStrict(true)
-	err := decoder.Decode(&c)
+	err = decoder.Decode(&c)
 	return c, err
 }

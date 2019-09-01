@@ -3,9 +3,19 @@ tasks:
       name: jc
       config:
         baseurl: "https://bet.hkjc.com/football/getJSON.aspx?jsontype=odds_%s.aspx"
-        rate: 10
+        rate: 3
     target:
       name: ndjson
       config:
         path: jc.ndjson
+    schedule: "10 * * * * *"
+  - tap:
+      name: radar
+      config:
+        baseurl: ""
+        rate: 3
+    target:
+      name: ndjson
+      config:
+        path: radar.ndjson
     schedule: "10 * * * * *"
