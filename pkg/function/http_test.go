@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/twistedogic/doom/pkg/model"
 )
 
 const testdataPath = "../../testdata"
@@ -44,7 +42,7 @@ func TestOddHandler(t *testing.T) {
 	ts := Setup(t, testdataPath)
 	defer ts.Close()
 	DefaultURL = fmt.Sprintf("%s/%s", ts.URL, "%s")
-	o, err := New(&model.Odd{})
+	o, err := New()
 	if err != nil {
 		t.Fatal(err)
 	}

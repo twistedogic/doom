@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/twistedogic/doom/pkg/function"
-	"github.com/twistedogic/doom/pkg/model"
 	"github.com/urfave/cli"
 )
 
@@ -36,7 +35,7 @@ var (
 
 func New() cli.Command {
 	run := func(c *cli.Context) error {
-		handler, err := function.New(&model.Odd{})
+		handler, err := function.New()
 		if err != nil {
 			return err
 		}

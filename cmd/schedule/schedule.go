@@ -2,14 +2,12 @@ package schedule
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 
 	"github.com/twistedogic/doom/cmd/options"
 	"github.com/twistedogic/doom/pkg/config"
 	"github.com/twistedogic/doom/pkg/schedule"
-	"github.com/twistedogic/doom/pkg/schedule/job"
 	"github.com/urfave/cli"
 )
 
@@ -33,23 +31,13 @@ var (
 )
 
 func scheduleTask(s *schedule.Scheduler, tasks []config.Task) error {
-	log.Println("schedule")
 	for _, t := range tasks {
-		tap, ok := options.TapOptions[t.Tap.Name]
-		if !ok {
-			return fmt.Errorf("no option %s for tap", t.Tap.Name)
-		}
-		target, ok := options.TargetOptions[t.Target.Name]
-		if !ok {
-			return fmt.Errorf("no option %s for target", t.Target.Name)
-		}
-		if err := tap.Load(t.Tap); err != nil {
+		job, err := options.Load(t)
+		if err != nil {
 			return err
 		}
-		if err := target.Load(t.Target); err != nil {
-			return err
-		}
-		if err := s.AddJob(t.Schedule, &job.Job{tap, target}); err != nil {
+		log.Printf("Scheduling %s", job.Name)
+		if err := s.AddJob(t.Schedule, job); err != nil {
 			return err
 		}
 	}
@@ -58,11 +46,7 @@ func scheduleTask(s *schedule.Scheduler, tasks []config.Task) error {
 
 func New() cli.Command {
 	run := func(c *cli.Context) error {
-		b, err := ioutil.ReadFile(configFlag)
-		if err != nil {
-			return err
-		}
-		cfg, err := config.New(b)
+		cfg, err := config.Load(configFlag)
 		if err != nil {
 			return err
 		}

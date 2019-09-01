@@ -37,8 +37,7 @@ func (m mockTap) Update(target.Target) error { return nil }
 func TestJob(t *testing.T) {
 	src := NewMockTap(t)
 	dst := NewMockTarget(t)
-	job := New()
-	job.Set(src, dst)
+	job := New("test", src, dst, time.Hour)
 	if err := job.Execute(); err != nil {
 		t.Fatal(err)
 	}
