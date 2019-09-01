@@ -12,7 +12,7 @@ import (
 	"github.com/twistedogic/jsonpath"
 )
 
-const testdataPath = "../../testdata"
+const testdataPath = "../../../../testdata"
 
 func ReadTestFile(t *testing.T, file string) []byte {
 	t.Helper()

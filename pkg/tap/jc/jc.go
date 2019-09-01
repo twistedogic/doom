@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/twistedogic/doom/pkg/helper/client"
-	"github.com/twistedogic/doom/pkg/model"
+	"github.com/twistedogic/doom/pkg/tap/jc/model"
 	"github.com/twistedogic/doom/pkg/target"
 	"github.com/twistedogic/jsonpath"
 )
@@ -91,5 +91,10 @@ func (c *Client) Update(t target.Target) error {
 	if err != nil {
 		return err
 	}
-	return t.BulkUpsert(items)
+	for _, item := range items {
+		if err := t.UpsertItem(item); err != nil {
+			return err
+		}
+	}
+	return nil
 }

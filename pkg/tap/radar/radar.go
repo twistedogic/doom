@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/twistedogic/doom/pkg/helper/client"
-	"github.com/twistedogic/doom/pkg/model"
+	"github.com/twistedogic/doom/pkg/tap/radar/model"
 	"github.com/twistedogic/doom/pkg/target"
 	"github.com/twistedogic/jsonpath"
 )
