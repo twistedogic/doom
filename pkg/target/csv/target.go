@@ -3,11 +3,9 @@ package csv
 import (
 	"encoding/csv"
 	"os"
-	"time"
 
 	"github.com/twistedogic/doom/pkg/config"
 	"github.com/twistedogic/doom/pkg/helper/file"
-	"github.com/twistedogic/doom/pkg/helper/flatten"
 )
 
 type Target struct {
@@ -58,21 +56,4 @@ func (t *Target) UpsertItem(i interface{}) error {
 		return Marshal(t.writer, i, true)
 	}
 	return Marshal(t.writer, i, false)
-}
-
-func (t *Target) BulkUpsert(i interface{}) error {
-	items, ok := flatten.InterfaceToSlice(i)
-	if !ok {
-		return t.UpsertItem(i)
-	}
-	for _, item := range items {
-		if err := t.UpsertItem(item); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (t *Target) GetLastUpdate() time.Time {
-	return t.info.ModTime()
 }

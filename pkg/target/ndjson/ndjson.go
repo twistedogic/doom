@@ -4,12 +4,10 @@ import (
 	"bufio"
 	"io"
 	"os"
-	"time"
 
 	json "github.com/json-iterator/go"
 	"github.com/twistedogic/doom/pkg/config"
 	"github.com/twistedogic/doom/pkg/helper/file"
-	"github.com/twistedogic/doom/pkg/helper/flatten"
 	"github.com/twistedogic/doom/pkg/target"
 )
 
@@ -50,24 +48,6 @@ func (t *Target) UpsertItem(i interface{}) error {
 		return err
 	}
 	return nil
-}
-
-func (t *Target) BulkUpsert(i interface{}) error {
-	items, ok := flatten.InterfaceToSlice(i)
-	if !ok {
-		return t.UpsertItem(i)
-	}
-	for _, item := range items {
-		if err := t.UpsertItem(item); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (t *Target) GetLastUpdate() time.Time {
-	info, _ := t.file.Stat()
-	return info.ModTime()
 }
 
 func (t *Target) Update(dst target.Target) error {

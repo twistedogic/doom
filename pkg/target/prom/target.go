@@ -6,7 +6,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/twistedogic/doom/pkg/config"
-	"github.com/twistedogic/doom/pkg/helper/flatten"
 )
 
 type Target struct {
@@ -29,21 +28,4 @@ func (t *Target) Load(s config.Setting) error {
 func (t *Target) UpsertItem(i interface{}) error {
 	t.lastupdate = time.Now()
 	return Update(t.metric, i)
-}
-
-func (t *Target) BulkUpsert(i interface{}) error {
-	items, ok := flatten.InterfaceToSlice(i)
-	if !ok {
-		return t.UpsertItem(i)
-	}
-	for _, item := range items {
-		if err := t.UpsertItem(item); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (t *Target) GetLastUpdate() time.Time {
-	return t.lastupdate
 }

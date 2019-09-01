@@ -47,8 +47,10 @@ func TestTarget(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := target.BulkUpsert(tc.input); err != nil {
-				t.Fatal(err)
+			for _, v := range tc.input {
+				if err := target.UpsertItem(v); err != nil {
+					t.Fatal(err)
+				}
 			}
 			b, err := ioutil.ReadFile(filename)
 			if err != nil {
