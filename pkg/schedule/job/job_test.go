@@ -19,8 +19,7 @@ func NewMockTarget(t *testing.T) mockTarget {
 
 func (m mockTarget) Load(config.Setting) error    { return nil }
 func (m mockTarget) UpsertItem(interface{}) error { return nil }
-func (m mockTarget) BulkUpsert(interface{}) error { return nil }
-func (m mockTarget) GetLastUpdate() time.Time     { return time.Now() }
+func (m mockTarget) Close() error                 { return nil }
 
 type mockTap struct {
 	t *testing.T

@@ -42,3 +42,7 @@ func (s *BoltStore) UpsertItem(item interface{}) error {
 		return s.Store.TxUpsert(tx, id, item)
 	})
 }
+
+func (s *BoltStore) Close() error {
+	return s.Store.Close()
+}

@@ -25,6 +25,10 @@ func TestMarshal(t *testing.T) {
 		if err := Marshal(w, input, true); err != nil {
 			t.Fatal(err)
 		}
+		w.Flush()
+		if err := w.Error(); err != nil {
+			t.Fatal(err)
+		}
 		output := buf.String()
 		if diff := cmp.Diff(expect, output); diff != "" {
 			t.Fatal(diff)

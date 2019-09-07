@@ -7,4 +7,5 @@ import (
 type Target interface {
 	Load(config.Setting) error
 	UpsertItem(interface{}) error
+	Close() error
 }

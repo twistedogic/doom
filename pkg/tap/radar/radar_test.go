@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/twistedogic/doom/pkg/config"
 )
@@ -115,8 +114,7 @@ func NewMockTarget(t *testing.T) mockTarget {
 
 func (m mockTarget) Load(config.Setting) error    { return nil }
 func (m mockTarget) UpsertItem(interface{}) error { return nil }
-func (m mockTarget) BulkUpsert(interface{}) error { return nil }
-func (m mockTarget) GetLastUpdate() time.Time     { return time.Now() }
+func (m mockTarget) Close() error                 { return nil }
 
 func TestUpdate(t *testing.T) {
 	t.Skip()

@@ -57,3 +57,8 @@ func (t *Target) UpsertItem(i interface{}) error {
 	}
 	return Marshal(t.writer, i, false)
 }
+
+func (t *Target) Close() error {
+	t.writer.Flush()
+	return t.writer.Error()
+}

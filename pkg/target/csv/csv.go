@@ -45,8 +45,7 @@ func marshal(w *csv.Writer, rows []Row) error {
 			return err
 		}
 	}
-	w.Flush()
-	return w.Error()
+	return nil
 }
 
 func Marshal(w *csv.Writer, i interface{}, withHeader bool) error {

@@ -29,3 +29,7 @@ func (t *Target) UpsertItem(i interface{}) error {
 	t.lastupdate = time.Now()
 	return Update(t.metric, i)
 }
+
+func (t *Target) Close() error {
+	return nil
+}

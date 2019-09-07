@@ -87,6 +87,7 @@ func (c *Client) GetOdds() ([]model.Odd, error) {
 }
 
 func (c *Client) Update(t target.Target) error {
+	defer t.Close()
 	items, err := c.GetOdds()
 	if err != nil {
 		return err

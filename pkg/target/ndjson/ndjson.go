@@ -3,7 +3,6 @@ package ndjson
 import (
 	"bufio"
 	"io"
-	"os"
 
 	json "github.com/json-iterator/go"
 	"github.com/twistedogic/doom/pkg/config"
@@ -13,7 +12,7 @@ import (
 
 type Target struct {
 	Path string
-	file *os.File
+	File io.ReadWriter
 }
 
 func New(filename string) (*Target, error) {
@@ -32,7 +31,7 @@ func (t *Target) Load(s config.Setting) error {
 	if err != nil {
 		return err
 	}
-	t.file = f
+	t.File = f
 	return nil
 }
 
@@ -41,17 +40,21 @@ func (t *Target) UpsertItem(i interface{}) error {
 	if err != nil {
 		return err
 	}
-	if _, err := t.file.Write(b); err != nil {
+	if _, err := t.File.Write(b); err != nil {
 		return err
 	}
-	if _, err := t.file.WriteString("\n"); err != nil {
+	if _, err := io.WriteString(t.File, "\n"); err != nil {
 		return err
 	}
 	return nil
 }
 
+func (t *Target) Close() error {
+	return nil
+}
+
 func (t *Target) Update(dst target.Target) error {
-	r := bufio.NewReader(t.file)
+	r := bufio.NewReader(t.File)
 	for {
 		line, _, err := r.ReadLine()
 		if err == io.EOF {
@@ -70,5 +73,5 @@ func (t *Target) Update(dst target.Target) error {
 			}
 		}
 	}
-	return nil
+	return dst.Close()
 }

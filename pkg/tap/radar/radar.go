@@ -111,6 +111,7 @@ func (c *Client) FetchDetail(matchCh chan model.Match, detailCh chan model.Match
 }
 
 func (c *Client) Update(t target.Target) error {
+	defer t.Close()
 	wg := &sync.WaitGroup{}
 	matchCh := make(chan model.Match)
 	detailCh := make(chan model.MatchDetail)

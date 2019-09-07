@@ -137,5 +137,6 @@ func (t *Tap) Update(dst target.Target) error {
 			}
 		}
 	}()
+	defer dst.Close()
 	return <-errCh
 }
