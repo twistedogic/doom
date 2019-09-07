@@ -13,6 +13,7 @@ import (
 	"github.com/twistedogic/doom/pkg/tap/radar"
 	"github.com/twistedogic/doom/pkg/target"
 	"github.com/twistedogic/doom/pkg/target/csv"
+	"github.com/twistedogic/doom/pkg/target/drive"
 	"github.com/twistedogic/doom/pkg/target/ndjson"
 )
 
@@ -26,6 +27,7 @@ func init() {
 
 	TargetOptions["csv"] = &csv.Target{}
 	TargetOptions["ndjson"] = &ndjson.Target{}
+	TargetOptions["drive"] = &drive.Drive{}
 }
 
 func Load(t config.Task) (*job.Job, error) {
