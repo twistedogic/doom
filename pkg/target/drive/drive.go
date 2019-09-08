@@ -3,10 +3,11 @@ package drive
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/twistedogic/doom/pkg/config"
-	"github.com/twistedogic/doom/pkg/target/drive/token"
+	"github.com/twistedogic/doom/pkg/helper/token"
 	"github.com/twistedogic/doom/pkg/target/ndjson"
 	"golang.org/x/net/context"
 	"google.golang.org/api/drive/v3"
@@ -81,6 +82,18 @@ func (d *Drive) IsExist(name string) (id string, exist bool, err error) {
 	return
 }
 
+func (d *Drive) Download(id string, w io.Writer) error {
+	res, err := d.service.Files.Get(id).Download()
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if _, err := io.Copy(w, res.Body); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (d *Drive) createFolders(names ...string) (string, error) {
 	var parentID string
 	for _, name := range names {
@@ -131,7 +144,6 @@ func (d *Drive) writeFile(path string) error {
 	}
 	_, err = d.service.Files.Create(file).Media(d.buf.File).Do()
 	return err
-
 }
 
 func (d *Drive) Delete(id string) error {

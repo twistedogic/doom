@@ -1,10 +1,14 @@
 package drive
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 const (
@@ -32,22 +36,42 @@ func TestDrive(t *testing.T) {
 	setup(t)
 	cases := map[string]struct {
 		filename string
+		path     string
+		content  testItem
 	}{
-		"base":              {"test"},
-		"with dir":          {"dir1/test"},
-		"with multiple dir": {"dir1/dir2/test"},
+		"base":              {"base", "base", testItem{"base"}},
+		"with dir":          {"dir_base", "dir1/dir_base", testItem{"dir_base"}},
+		"with multiple dir": {"basename", "dir1/dir2/basename", testItem{"basename"}},
 	}
 	for name := range cases {
 		tc := cases[name]
 		t.Run(name, func(t *testing.T) {
-			d, err := New(tc.filename, testCred, testCache)
+			d, err := New(tc.path, testCred, testCache)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := d.UpsertItem(testItem{tc.filename}); err != nil {
+			if err := d.UpsertItem(tc.content); err != nil {
 				t.Fatal(err)
 			}
 			if err := d.Close(); err != nil {
+				t.Fatal(err)
+			}
+			id, exist, err := d.IsExist(tc.filename)
+			if err != nil || !exist {
+				t.Fatal(err)
+			}
+			buf := &bytes.Buffer{}
+			if err := d.Download(id, buf); err != nil {
+				t.Fatal(err)
+			}
+			var item testItem
+			if err := json.NewDecoder(buf).Decode(&item); err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(testItem{tc.filename}, item); diff != "" {
+				t.Fatal(diff)
+			}
+			if err := d.Delete(id); err != nil {
 				t.Fatal(err)
 			}
 		})
