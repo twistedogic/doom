@@ -2,19 +2,18 @@ package job
 
 import (
 	"context"
+	"io"
 	"log"
 	"time"
 
 	"github.com/twistedogic/doom/pkg/tap"
-	"github.com/twistedogic/doom/pkg/target"
 )
 
 type Status string
 
 const (
-	ERROR   Status = "ERROR"
-	TIMEOUT Status = "TIMEOUT"
-	DONE    Status = "DONE"
+	ERROR Status = "ERROR"
+	DONE  Status = "DONE"
 )
 
 func TimeIt() func() time.Duration {
@@ -28,10 +27,10 @@ type Job struct {
 	Timeout time.Duration
 	Name    string
 	Src     tap.Tap
-	Dst     target.Target
+	Dst     io.WriteCloser
 }
 
-func New(name string, src tap.Tap, dst target.Target, timeout time.Duration) *Job {
+func New(name string, src tap.Tap, dst io.WriteCloser, timeout time.Duration) *Job {
 	return &Job{
 		Name:    name,
 		Src:     src,
@@ -40,7 +39,7 @@ func New(name string, src tap.Tap, dst target.Target, timeout time.Duration) *Jo
 	}
 }
 
-func (j *Job) Set(src tap.Tap, dst target.Target) {
+func (j *Job) Set(src tap.Tap, dst io.WriteCloser) {
 	j.SetSrc(src)
 	j.SetDst(dst)
 }
@@ -49,31 +48,20 @@ func (j *Job) SetSrc(src tap.Tap) {
 	j.Src = src
 }
 
-func (j *Job) SetDst(dst target.Target) {
+func (j *Job) SetDst(dst io.WriteCloser) {
 	j.Dst = dst
 }
 
 func (j *Job) Execute() error {
-	return j.Src.Update(j.Dst)
+	ctx, _ := context.WithTimeout(context.Background(), j.Timeout)
+	return j.Src.Update(ctx, j.Dst)
 }
 
 func (j *Job) Run() {
-	ctx, cancel := context.WithTimeout(context.Background(), j.Timeout)
-	defer cancel()
 	timeit := TimeIt()
-	errCh := make(chan error)
-	go func() {
-		errCh <- j.Execute()
-	}()
-	select {
-	case <-ctx.Done():
-		log.Printf("%s %s %s", TIMEOUT, j.Name, timeit())
+	if err := j.Execute(); err != nil {
+		log.Printf("%s %s %s %v", ERROR, j.Name, timeit(), err)
 		return
-	case err := <-errCh:
-		if err != nil {
-			log.Printf("%s %s %s %v", ERROR, j.Name, timeit(), err)
-			return
-		}
-		log.Printf("%s %s %s", DONE, j.Name, timeit())
 	}
+	log.Printf("%s %s %s", DONE, j.Name, timeit())
 }

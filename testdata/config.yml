@@ -8,14 +8,30 @@ tasks:
       name: ndjson
       config:
         path: jc.ndjson
+        rotate: true
     schedule: "10 * * * * *"
+    timeout: "2h"
   - tap:
       name: radar
       config:
-        baseurl: ""
+        baseurl: "https://lsc.fn.sportradar.com/hkjc/en"
         rate: 3
     target:
       name: ndjson
       config:
         path: radar.ndjson
+        rotate: true
     schedule: "10 * * * * *"
+    timeout: "2h"
+  - tap:
+      name: backfill
+      config:
+        baseurl: "https://www.football-data.co.uk/data.php"
+        rate: 5
+    target:
+      name: ndjson
+      config:
+        path: backfill.ndjson
+        rotate: true
+    schedule: "10 * * * * *"
+    timeout: "2h"

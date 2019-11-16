@@ -1,11 +1,10 @@
 package job
 
 import (
+	"context"
+	"io"
 	"testing"
 	"time"
-
-	"github.com/twistedogic/doom/pkg/config"
-	"github.com/twistedogic/doom/pkg/target"
 )
 
 type mockTarget struct {
@@ -17,9 +16,8 @@ func NewMockTarget(t *testing.T) mockTarget {
 	return mockTarget{t}
 }
 
-func (m mockTarget) Load(config.Setting) error    { return nil }
-func (m mockTarget) UpsertItem(interface{}) error { return nil }
-func (m mockTarget) Close() error                 { return nil }
+func (m mockTarget) Close() error              { return nil }
+func (m mockTarget) Write([]byte) (int, error) { return 0, nil }
 
 type mockTap struct {
 	t *testing.T
@@ -30,8 +28,7 @@ func NewMockTap(t *testing.T) mockTap {
 	return mockTap{t}
 }
 
-func (m mockTap) Load(config.Setting) error  { return nil }
-func (m mockTap) Update(target.Target) error { return nil }
+func (m mockTap) Update(context.Context, io.WriteCloser) error { return nil }
 
 func TestJob(t *testing.T) {
 	src := NewMockTap(t)

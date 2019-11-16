@@ -1,10 +1,10 @@
 package token
 
 import (
-	"github.com/twistedogic/doom/pkg/target/drive/token"
+	"github.com/twistedogic/doom/pkg/target/file/drive"
 	"github.com/urfave/cli"
 	"golang.org/x/net/context"
-	"google.golang.org/api/drive/v3"
+	gdrive "google.golang.org/api/drive/v3"
 )
 
 var (
@@ -30,8 +30,8 @@ var (
 func New() cli.Command {
 	run := func(c *cli.Context) error {
 		ctx := context.Background()
-		scope := drive.DriveScope
-		_, err := token.GetClient(ctx, scope, credFlag, cacheFlag)
+		scope := gdrive.DriveScope
+		_, err := drive.GetClient(ctx, scope, credFlag, cacheFlag)
 		return err
 	}
 	return cli.Command{
