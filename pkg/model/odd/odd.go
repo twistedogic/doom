@@ -18,7 +18,7 @@ const (
 type (
 	MatchModel struct {
 		ID         string
-		BetradarID string
+		BetradarID int
 		MatchTime  time.Time
 		Timestamp  time.Time
 		Home       string
@@ -90,7 +90,11 @@ func ParseMatchModel(m Match) (MatchModel, error) {
 		match.Timestamp = statusUpdate
 	}
 	if m.LiveEvent != nil {
-		match.BetradarID = m.LiveEvent.MatchIDbetradar
+		id, err := strconv.Atoi(m.LiveEvent.MatchIDbetradar)
+		if err != nil {
+			return match, err
+		}
+		match.BetradarID = id
 	}
 	return match, nil
 }

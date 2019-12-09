@@ -1,4 +1,4 @@
-package odd
+package match
 
 import (
 	"testing"
@@ -12,7 +12,7 @@ func TestTransform(t *testing.T) {
 	cases := map[string]struct {
 		name string
 	}{
-		"base": {"fha"},
+		"base": {"fullfeed"},
 	}
 	for name := range cases {
 		tc := cases[name]
