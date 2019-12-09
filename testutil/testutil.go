@@ -96,7 +96,7 @@ type MockStore struct {
 	hasError bool
 }
 
-func NewMockStore(t *testing.T, content map[string][]byte, hasError bool) MockStore {
+func NewMockStore(t *testing.T, content map[string][]byte, hasError bool) *MockStore {
 	return &MockStore{t, content, hasError}
 }
 

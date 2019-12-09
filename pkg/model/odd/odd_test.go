@@ -22,7 +22,9 @@ func TestTransform(t *testing.T) {
 			if err := Transform(f, target); err != nil {
 				t.Fatal(err)
 			}
-			t.Log(string(target.Bytes()))
+			if len(target.Bytes) == 0 {
+				t.Fatal(string(target.Bytes()))
+			}
 		})
 	}
 }

@@ -12,8 +12,7 @@ type Target struct {
 	fs afero.Fs
 }
 
-func New() *Target {
-	fs := afero.NewOsFs()
+func New(fs afero.Fs) *Target {
 	return &Target{fs}
 }
 

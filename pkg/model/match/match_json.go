@@ -200,9 +200,9 @@ type Ft struct {
 }
 
 type Result struct {
-	Away   *int64  `json:"away"`
-	Home   *int64  `json:"home"`
-	Winner *string `json:"winner"`
+	Away   int64  `json:"away"`
+	Home   int64  `json:"home"`
+	Winner string `json:"winner"`
 }
 
 type Roundname struct {
@@ -222,11 +222,11 @@ type Status struct {
 }
 
 type Teams struct {
-	Away TeamsAway `json:"away"`
-	Home TeamsAway `json:"home"`
+	Away Team `json:"away"`
+	Home Team `json:"home"`
 }
 
-type TeamsAway struct {
+type Team struct {
 	Doc        string  `json:"_doc"`
 	ID         int64   `json:"_id"`
 	Abbr       string  `json:"abbr"`

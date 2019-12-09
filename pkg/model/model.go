@@ -8,10 +8,10 @@ import (
 	"github.com/twistedogic/doom/pkg/store"
 )
 
-type Prefix string
+type Type string
 
 type Item struct {
-	Type Prefix
+	Type Type
 	Data json.RawMessage
 }
 
