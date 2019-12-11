@@ -25,6 +25,7 @@ func TestTransform(t *testing.T) {
 			if len(target.Bytes()) == 0 {
 				t.Fatal(string(target.Bytes()))
 			}
+			t.Log(string(target.Bytes()))
 		})
 	}
 }

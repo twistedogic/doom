@@ -1,5 +1,7 @@
 package match
 
+import "encoding/json"
+
 type Feed struct {
 	Doc      []Doc  `json:"doc"`
 	QueryURL string `json:"queryUrl"`
@@ -153,6 +155,29 @@ type Periods struct {
 	Ft *Ft `json:"ft,omitempty"`
 	P1 Ft  `json:"p1"`
 	Ot *Ft `json:"ot,omitempty"`
+}
+
+func (p *Periods) UnmarshalJSON(b []byte) error {
+	container := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(b, &container); err != nil {
+		p = nil
+		return nil
+	}
+	for k, v := range container {
+		var ft Ft
+		if err := json.Unmarshal(v, &ft); err != nil {
+			return err
+		}
+		switch k {
+		case "p1":
+			p.P1 = ft
+		case "ft":
+			p.Ft = &ft
+		case "ot":
+			p.Ot = &ft
+		}
+	}
+	return nil
 }
 
 type Ft struct {

@@ -3,13 +3,16 @@ package match
 import (
 	"encoding/json"
 	"io"
+	"time"
 )
 
 type MatchModel struct {
-	ID      int
-	Home    string
-	Away    string
-	Periods *Periods
+	ID          int
+	Home        string
+	Away        string
+	Periods     *Periods
+	Result      Result
+	LastUpdated time.Time
 }
 
 func Transform(r io.Reader, target io.WriteCloser) error {
@@ -26,11 +29,14 @@ func Transform(r io.Reader, target io.WriteCloser) error {
 				for _, cat := range datum.Realcategories {
 					for _, tournament := range cat.Tournaments {
 						for _, match := range tournament.Matches {
+							lastUpdate := time.Unix(int64(match.UpdatedUts), 0)
 							m := MatchModel{
-								ID:      match.ID,
-								Home:    match.Teams.Home.Name,
-								Away:    match.Teams.Away.Name,
-								Periods: match.Periods,
+								ID:          match.ID,
+								Home:        match.Teams.Home.Name,
+								Away:        match.Teams.Away.Name,
+								Periods:     match.Periods,
+								Result:      match.Result,
+								LastUpdated: lastUpdate,
 							}
 							if err := encoder.Encode(m); err != nil {
 								return err

@@ -89,7 +89,7 @@ func ParseMatchModel(m Match) (MatchModel, error) {
 		}
 		match.Timestamp = statusUpdate
 	}
-	if m.LiveEvent != nil {
+	if m.LiveEvent != nil && m.LiveEvent.MatchIDbetradar != "" {
 		id, err := strconv.Atoi(m.LiveEvent.MatchIDbetradar)
 		if err != nil {
 			return match, err
