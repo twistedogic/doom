@@ -20,14 +20,14 @@ type Client struct {
 	ratelimit.Limiter
 }
 
-func New(rate int) *Client {
-	return &Client{
+func New(rate int) Client {
+	return Client{
 		&http.Client{},
 		NewLimiter(rate),
 	}
 }
 
-func (c *Client) Request(req *http.Request, w io.Writer) error {
+func (c Client) Request(req *http.Request, w io.Writer) error {
 	c.Take()
 	log.Printf("%s %s", req.Method, req.URL)
 	res, err := c.Do(req)
@@ -43,7 +43,7 @@ func (c *Client) Request(req *http.Request, w io.Writer) error {
 	return nil
 }
 
-func (c *Client) GetResponse(u string, w io.Writer) error {
+func (c Client) GetResponse(u string, w io.Writer) error {
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return err

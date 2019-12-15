@@ -22,25 +22,25 @@ const (
 
 type Client struct {
 	BaseURL string
-	*client.Client
+	client.Client
 }
 
-func New(u string, rate int) *Client {
+func New(u string, rate int) Client {
 	c := client.New(rate)
-	return &Client{u, c}
+	return Client{u, c}
 }
 
-func (c *Client) GenerateURL(path string, id int) string {
+func (c Client) GenerateURL(path string, id int) string {
 	requestPath := fmt.Sprintf(path, id)
 	return fmt.Sprintf("%s%s", c.BaseURL, requestPath)
 }
 
-func (c *Client) GetFeed(offset int, w io.Writer) error {
+func (c Client) GetFeed(offset int, w io.Writer) error {
 	u := c.GenerateURL(FullFeedPath, offset)
 	return c.GetResponse(u, w)
 }
 
-func (c *Client) GetDetail(id int, w io.Writer) error {
+func (c Client) GetDetail(id int, w io.Writer) error {
 	u := c.GenerateURL(DetailPath, id)
 	return c.GetResponse(u, w)
 }
@@ -74,7 +74,7 @@ func getMatchID(r io.Reader, ch chan int) error {
 	return nil
 }
 
-func (c *Client) Update(ctx context.Context, w io.WriteCloser) error {
+func (c Client) Update(ctx context.Context, w io.WriteCloser) error {
 	defer w.Close()
 	wg := &sync.WaitGroup{}
 	matchIDCh := make(chan int)

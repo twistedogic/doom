@@ -18,20 +18,20 @@ var BetTypes = []string{"had", "fha", "hha", "hft"}
 type Client struct {
 	BaseURL string
 	BetType string
-	*client.Client
+	client.Client
 }
 
-func New(u, bettype string, rate int) *Client {
+func New(u, bettype string, rate int) Client {
 	c := client.New(rate)
-	return &Client{u, bettype, c}
+	return Client{u, bettype, c}
 }
 
-func (c *Client) GenerateURL() string {
+func (c Client) GenerateURL() string {
 	requestPath := fmt.Sprintf(Path, c.BetType)
 	return fmt.Sprintf("%s%s", c.BaseURL, requestPath)
 }
 
-func (c *Client) Update(ctx context.Context, w io.WriteCloser) error {
+func (c Client) Update(ctx context.Context, w io.WriteCloser) error {
 	errCh := make(chan error)
 	defer w.Close()
 	go func() {
