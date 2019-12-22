@@ -8,6 +8,8 @@ require (
 	github.com/google/go-cmp v0.3.1
 	github.com/json-iterator/go v1.1.8
 	github.com/mitchellh/mapstructure v1.1.2
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/prometheus/client_golang v1.2.1
 	github.com/robfig/cron v1.2.0
 	github.com/spf13/afero v1.2.2

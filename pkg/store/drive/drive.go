@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"golang.org/x/net/context"
@@ -13,42 +12,69 @@ import (
 
 const (
 	FolderType = "application/vnd.google-apps.folder"
+	TextType   = "text/plain"
 )
 
-type Drive struct {
-	service    *drive.Service
-	MimeType   string
-	Credential string
-	CacheFile  string
-	Append     bool
-}
-
-func New(credFile, cacheFile string) (*Drive, error) {
-	d := &Drive{
-		Credential: credFile,
-		CacheFile:  cacheFile,
+func containId(ids []string, id string) bool {
+	for _, i := range ids {
+		if i == id {
+			return true
+		}
 	}
-	err := d.Load()
-	return d, err
+	return false
 }
 
-func (d *Drive) Load() error {
-	ctx := context.Background()
-	client, err := GetClient(ctx, drive.DriveScope, d.Credential, d.CacheFile)
+type Drive struct {
+	service  *drive.Service
+	Base     string
+	ParentID string
+}
+
+func New(credFile, cacheFile, base string) (*Drive, error) {
+	ctx := context.TODO()
+	client, err := GetClient(ctx, drive.DriveScope, credFile, cacheFile)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	srv, err := drive.New(client)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	d.service = srv
-	return nil
+	d := &Drive{
+		service: srv,
+		Base:    base,
+	}
+	id, err := d.MkdirAll(base)
+	if err != nil {
+		return nil, err
+	}
+	d.ParentID = id
+	return d, nil
 }
 
 func (d *Drive) Find(name string) (*drive.FileList, error) {
 	query := fmt.Sprintf("name='%s'", name)
 	return d.service.Files.List().Q(query).Do()
+}
+
+func (d *Drive) List() ([]string, error) {
+	ctx := context.TODO()
+	listCall := d.service.Files.List()
+	names := []string{}
+	for {
+		err := listCall.Pages(ctx, func(list *drive.FileList) error {
+			for _, file := range list.Files {
+				if containId(file.Parents, d.ParentID) {
+					names = append(names, file.Name)
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			return names, err
+		}
+	}
+	return names, nil
 }
 
 func (d *Drive) IsExist(name string) (id string, err error) {
@@ -67,20 +93,23 @@ func (d *Drive) IsExist(name string) (id string, err error) {
 	return
 }
 
-func (d *Drive) Delete(id string) error {
+func (d *Drive) Delete(name string) error {
+	id, err := d.pathToId(name)
+	if err != nil {
+		return err
+	}
 	return d.service.Files.Delete(id).Do()
 }
 
 func (d *Drive) Download(id string, w io.Writer) error {
+	fmt.Println(id)
 	res, err := d.service.Files.Get(id).Download()
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
-	if _, err := io.Copy(w, res.Body); err != nil {
-		return err
-	}
-	return nil
+	_, err = io.Copy(w, res.Body)
+	return err
 }
 
 func (d *Drive) Update(id string, file *drive.File, r io.Reader) error {
@@ -117,37 +146,43 @@ func (d *Drive) MkdirAll(path string) (string, error) {
 	return parentID, nil
 }
 
-func (d *Drive) WriteFile(path string, r io.ReadWriter) (string, error) {
-	var id string
-	dirs, filename := filepath.Split(path)
-	file := &drive.File{Name: filename, MimeType: d.MimeType}
-	parentID, err := d.MkdirAll(dirs)
+func (d *Drive) pathToId(path string) (string, error) {
+	var fileId string
+	list, err := d.Find(path)
 	if err != nil {
-		return id, err
-	}
-	list, err := d.Find(filename)
-	if err != nil {
-		return id, err
+		return fileId, err
 	}
 	for _, f := range list.Files {
 		for _, p := range f.Parents {
-			if p == parentID {
-				if d.Append {
-					if err := d.Download(f.Id, r); err != nil {
-						return f.Id, err
-					}
-				}
-				err := d.Update(f.Id, file, r)
-				return f.Id, err
+			if p == d.ParentID {
+				return f.Id, nil
 			}
 		}
 	}
-	if parentID != "" {
-		file.Parents = []string{parentID}
-	}
-	f, err := d.Create(file, r)
+	return fileId, os.ErrNotExist
+}
+
+func (d *Drive) ReadFile(path string, w io.Writer) error {
+	id, err := d.pathToId(path)
 	if err != nil {
-		return id, err
+		return err
 	}
-	return f.Id, nil
+	return d.Download(id, w)
+}
+
+func (d *Drive) WriteFile(path string, r io.ReadWriter) error {
+	file := &drive.File{
+		Name:     path,
+		Parents:  []string{d.ParentID},
+		MimeType: TextType,
+	}
+	id, err := d.pathToId(path)
+	if os.IsNotExist(err) {
+		_, err := d.Create(file, r)
+		return err
+	}
+	if err != nil {
+		return err
+	}
+	return d.Update(id, file, r)
 }

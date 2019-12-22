@@ -10,9 +10,10 @@ import (
 
 type Type string
 
-type Item struct {
-	Type Type
-	Data json.RawMessage
+type Item interface {
+	Key() string
+	Type() Type
+	Data() []byte
 }
 
 type Modeler interface {
