@@ -100,11 +100,16 @@ func NewMockStore(t *testing.T, content map[string][]byte, hasError bool) *MockS
 	return &MockStore{t, content, hasError}
 }
 
+func (m *MockStore) Content() map[string][]byte {
+	return m.content
+}
+
 func (m *MockStore) Get(key string) ([]byte, error) {
 	return m.content[key], nil
 }
 
 func (m *MockStore) Set(key string, b []byte) error {
+	m.t.Log(key, b)
 	if m.hasError {
 		return TestError
 	}
@@ -112,7 +117,7 @@ func (m *MockStore) Set(key string, b []byte) error {
 	return nil
 }
 
-func (m *MockStore) Scan(string) ([]string, error) {
+func (m *MockStore) Scan(...string) ([]string, error) {
 	if m.hasError {
 		return nil, TestError
 	}
