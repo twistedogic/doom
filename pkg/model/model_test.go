@@ -6,7 +6,9 @@ import (
 	"errors"
 	"io"
 	"testing"
+	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/twistedogic/doom/testutil"
 )
 
@@ -20,9 +22,9 @@ func (m mockData) Item(i *Item) error {
 	return nil
 }
 
-func setupMockTransform(t *testing.T, ttype Type, hasError bool) func(io.Reader, Encoder) error {
+func setupMockTransformer(t *testing.T, ttype Type, hasError bool) Transformer {
 	t.Helper()
-	return func(r io.Reader, e Encoder) error {
+	transform := func(r io.Reader, e Encoder) error {
 		if hasError {
 			return errors.New("error")
 		}
@@ -35,12 +37,14 @@ func setupMockTransform(t *testing.T, ttype Type, hasError bool) func(io.Reader,
 			if err != nil {
 				return err
 			}
-			if err := e.Encode(mockData{ttype, line}); err != nil {
+			data := mockData{ttype, line}
+			if err := e.Encode(data); err != nil {
 				return err
 			}
 		}
 		return nil
 	}
+	return transform
 }
 
 func TestModeler(t *testing.T) {
@@ -51,9 +55,25 @@ func TestModeler(t *testing.T) {
 			hasError bool
 		}
 		hasError bool
+		want     map[string][]byte
 	}{
-		"base": {
-			input: []byte("line1\nline2\nline3"),
+		"single transformer": {
+			input: []byte("line1\nline2\nline3\n"),
+			transformers: []struct {
+				ttype    Type
+				hasError bool
+			}{
+				{Type("test1"), false},
+			},
+			hasError: false,
+			want: map[string][]byte{
+				"test1:line1": []byte("line1"),
+				"test1:line2": []byte("line2"),
+				"test1:line3": []byte("line3"),
+			},
+		},
+		"multi-transformers": {
+			input: []byte("line1\nline2\nline3\n"),
 			transformers: []struct {
 				ttype    Type
 				hasError bool
@@ -62,25 +82,38 @@ func TestModeler(t *testing.T) {
 				{Type("test2"), false},
 			},
 			hasError: false,
+			want: map[string][]byte{
+				"test1:line1": []byte("line1"),
+				"test1:line2": []byte("line2"),
+				"test1:line3": []byte("line3"),
+				"test2:line1": []byte("line1"),
+				"test2:line2": []byte("line2"),
+				"test2:line3": []byte("line3"),
+			},
 		},
 	}
 	for name := range cases {
 		tc := cases[name]
 		t.Run(name, func(t *testing.T) {
 			s := testutil.NewMockStore(t, make(map[string][]byte), false)
-			transformers := make([]Transformer, len(tc.transformers))
-			for i, tt := range tc.transformers {
-				transformers[i] = setupMockTransform(t, tt.ttype, tt.hasError)
+			transformers := make([]Transformer, 0, len(tc.transformers))
+			for _, tt := range tc.transformers {
+				transformers = append(transformers, setupMockTransformer(
+					t, tt.ttype, tt.hasError,
+				))
 			}
 			m := New(s)
-			ctx := context.TODO()
+			ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
+			defer cancel()
 			if _, err := m.Write(tc.input); err != nil {
 				t.Fatal(err)
 			}
 			if err := m.Update(ctx, transformers...); (err != nil) != tc.hasError {
 				t.Fatal(err)
 			}
-			t.Log(s.Content())
+			if diff := cmp.Diff(s.Content(), tc.want); diff != "" {
+				t.Fatal(diff)
+			}
 		})
 	}
 }

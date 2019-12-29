@@ -65,16 +65,24 @@ func (m Modeler) Update(ctx context.Context, transformers ...Transformer) error 
 		wg.Wait()
 		close(m.itemCh)
 	}()
-	for _, transform := range transformers {
-		tee := io.TeeReader(m, m)
+	buffers := make([]io.Writer, len(transformers))
+	for i, transform := range transformers {
+		buf := new(bytes.Buffer)
+		buffers[i] = buf
 		wg.Add(1)
-		go func(r io.Reader, encoder Encoder) {
+		go func(fn Transformer, r io.Reader, encoder Encoder) {
 			defer wg.Done()
-			if err := transform(r, encoder); err != nil {
+			if err := fn(r, encoder); err != nil {
 				errCh <- err
 			}
-		}(tee, m)
+		}(transform, buf, m)
 	}
+	w := io.MultiWriter(buffers...)
+	go func() {
+		if _, err := io.Copy(w, m); err != nil {
+			errCh <- err
+		}
+	}()
 	for {
 		select {
 		case <-ctx.Done():
