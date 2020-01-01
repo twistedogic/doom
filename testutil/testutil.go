@@ -109,7 +109,6 @@ func (m *MockStore) Get(key string) ([]byte, error) {
 }
 
 func (m *MockStore) Set(key string, b []byte) error {
-	m.t.Log(key, string(b))
 	if m.hasError {
 		return TestError
 	}

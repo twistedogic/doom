@@ -3,10 +3,15 @@ package match
 import (
 	"encoding/json"
 	"io"
+	"strconv"
 	"time"
+
+	"github.com/twistedogic/doom/pkg/model"
 )
 
-type MatchModel struct {
+const Type model.Type = "match"
+
+type Model struct {
 	ID          int
 	Home        string
 	Away        string
@@ -15,10 +20,18 @@ type MatchModel struct {
 	LastUpdated time.Time
 }
 
-func Transform(r io.Reader, target io.WriteCloser) error {
-	defer target.Close()
+func (m Model) Item(i *model.Item) error {
+	b, err := json.Marshal(&m)
+	if err != nil {
+		return err
+	}
+	key := strconv.Itoa(m.ID)
+	i.Key, i.Type, i.Data = key, Type, b
+	return nil
+}
+
+func Transform(r io.Reader, encoder model.Encoder) error {
 	decoder := json.NewDecoder(r)
-	encoder := json.NewEncoder(target)
 	for decoder.More() {
 		var feed Feed
 		if err := decoder.Decode(&feed); err != nil {
@@ -30,7 +43,7 @@ func Transform(r io.Reader, target io.WriteCloser) error {
 					for _, tournament := range cat.Tournaments {
 						for _, match := range tournament.Matches {
 							lastUpdate := time.Unix(int64(match.UpdatedUts), 0)
-							m := MatchModel{
+							m := Model{
 								ID:          match.ID,
 								Home:        match.Teams.Home.Name,
 								Away:        match.Teams.Away.Name,

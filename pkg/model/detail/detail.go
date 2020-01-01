@@ -3,18 +3,30 @@ package detail
 import (
 	"encoding/json"
 	"io"
+	"strconv"
+
+	"github.com/twistedogic/doom/pkg/model"
 )
 
-type DetailModel struct {
+const Type model.Type = "detail"
+
+type Model struct {
 	MatchID int
 	Teams   Teams
 	Values  []Value
 }
 
-func Transform(r io.Reader, target io.WriteCloser) error {
-	defer target.Close()
+func (m Model) Item(i *model.Item) error {
+	b, err := json.Marshal(&m)
+	if err != nil {
+		return err
+	}
+	i.Key, i.Type, i.Data = strconv.Itoa(m.MatchID), Type, b
+	return nil
+}
+
+func Transform(r io.Reader, encoder model.Encoder) error {
 	decoder := json.NewDecoder(r)
-	encoder := json.NewEncoder(target)
 	for decoder.More() {
 		var feed Detail
 		if err := decoder.Decode(&feed); err != nil {
@@ -25,7 +37,7 @@ func Transform(r io.Reader, target io.WriteCloser) error {
 			for _, v := range doc.Data.Values {
 				values = append(values, v)
 			}
-			model := DetailModel{
+			model := Model{
 				MatchID: doc.Data.MatchID,
 				Teams:   doc.Data.Teams,
 				Values:  values,

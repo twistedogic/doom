@@ -3,18 +3,30 @@ package history
 import (
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"io"
+	"strings"
+	"time"
 
 	"github.com/fatih/structs"
 	"github.com/mitchellh/mapstructure"
+	"github.com/twistedogic/doom/pkg/model"
 )
 
 const (
-	dateFormat = "02/01/06"
-	tag        = "csv"
+	csvDateFormat = "02/01/06"
+	keyDateFormat = "20060201"
+	tag           = "csv"
+
+	Type model.Type = "history"
 )
 
-type History struct {
+func ToSnakeCase(s string) string {
+	lower := strings.ToLower(s)
+	return strings.ReplaceAll(lower, " ", "_")
+}
+
+type Model struct {
 	LeagueDivision            string  `csv:"Div"`
 	MatchDate                 string  `csv:"Date"`
 	Home                      string  `csv:"HomeTeam"`
@@ -61,13 +73,31 @@ type History struct {
 	BetAverageAway            float64 `csv:"BbAvA"`
 }
 
-func Transform(r io.Reader, target io.WriteCloser) error {
-	defer target.Close()
+func (m Model) Item(i *model.Item) error {
+	b, err := json.Marshal(&m)
+	if err != nil {
+		return err
+	}
+	date, err := time.Parse(csvDateFormat, m.MatchDate)
+	if err != nil {
+		fmt.Println(m.MatchDate)
+		return err
+	}
+	key := fmt.Sprintf(
+		"%s|%s|%s",
+		date.Format(keyDateFormat),
+		ToSnakeCase(m.Home),
+		ToSnakeCase(m.Away),
+	)
+	i.Key, i.Type, i.Data = key, Type, b
+	return nil
+}
+
+func Transform(r io.Reader, encoder model.Encoder) error {
 	reader := csv.NewReader(r)
-	encoder := json.NewEncoder(target)
 	indexMap := make(map[string]int)
 	fieldMap := make(map[string]string)
-	for _, field := range structs.Fields(History{}) {
+	for _, field := range structs.Fields(Model{}) {
 		name := field.Name()
 		fieldMap[name] = field.Tag(tag)
 	}
@@ -100,7 +130,7 @@ func Transform(r io.Reader, target io.WriteCloser) error {
 				container[name] = row[i]
 			}
 		}
-		model := new(History)
+		model := new(Model)
 		if err := mapstructure.WeakDecode(container, model); err != nil {
 			return err
 		}

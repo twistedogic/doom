@@ -9,32 +9,44 @@ import (
 	"time"
 
 	"github.com/fatih/structs"
+	"github.com/twistedogic/doom/pkg/model"
 )
 
 const (
 	dateFormat = "2006-01-02T15:04:05-07:00"
+
+	Type model.Type = "odd"
 )
 
 type (
 	MatchModel struct {
-		ID         string
+		MatchID    string
 		BetradarID int
 		MatchTime  time.Time
 		Timestamp  time.Time
 		Home       string
 		Away       string
 	}
-	OddModel struct {
-		ID        string
-		Timestamp time.Time
-		MatchID   string
-		Type      string
-		Outcome   string
-		Value     float64
+	Model struct {
+		MatchModel
+		ID      string
+		Type    string
+		Outcome string
+		Value   float64
 	}
 )
 
-func ParsePayout(v string) (float64, error) {
+func (m Model) Item(i *model.Item) error {
+	b, err := json.Marshal(&m)
+	if err != nil {
+		return err
+	}
+	key := fmt.Sprintf("%s_%s", m.Type, m.ID)
+	i.Key, i.Type, i.Data = key, Type, b
+	return nil
+}
+
+func parsePayout(v string) (float64, error) {
 	tokens := strings.Split(v, "@")
 	if len(tokens) != 2 {
 		return 0, fmt.Errorf("failed to parse payout: %s", v)
@@ -42,40 +54,11 @@ func ParsePayout(v string) (float64, error) {
 	return strconv.ParseFloat(tokens[1], 64)
 }
 
-func ParseOddModel(match Match) ([]OddModel, error) {
-	out := []OddModel{}
-	for name, field := range structs.Map(match) {
-		if strings.Contains(name, "odds") {
-			m, ok := field.(map[string]interface{})
-			if !ok {
-				continue
-			}
-			id, ok := m["ID"]
-			if !ok {
-				return nil, fmt.Errorf("no ID in %#v", m)
-			}
-			for k, v := range m {
-				if payout, err := ParsePayout(v.(string)); err == nil {
-					out = append(out, OddModel{
-						ID:        id.(string),
-						Timestamp: time.Now(),
-						MatchID:   match.MatchID,
-						Type:      name,
-						Outcome:   k,
-						Value:     payout,
-					})
-				}
-			}
-		}
-	}
-	return out, nil
-}
-
-func ParseMatchModel(m Match) (MatchModel, error) {
+func parseMatchModel(m Match) (MatchModel, error) {
 	match := MatchModel{
-		ID:   m.MatchID,
-		Home: m.HomeTeam.TeamNameEN,
-		Away: m.AwayTeam.TeamNameEN,
+		MatchID: m.MatchID,
+		Home:    m.HomeTeam.TeamNameEN,
+		Away:    m.AwayTeam.TeamNameEN,
 	}
 	matchTime, err := time.Parse(dateFormat, m.MatchTime)
 	if err != nil {
@@ -99,10 +82,40 @@ func ParseMatchModel(m Match) (MatchModel, error) {
 	return match, nil
 }
 
-func Transform(r io.Reader, target io.WriteCloser) error {
-	defer target.Close()
+func parseOddModel(match Match) ([]Model, error) {
+	out := []Model{}
+	matchModel, err := parseMatchModel(match)
+	if err != nil {
+		return nil, err
+	}
+	for name, field := range structs.Map(match) {
+		if strings.Contains(name, "odds") {
+			m, ok := field.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			id, ok := m["ID"]
+			if !ok {
+				return nil, fmt.Errorf("no ID in %#v", m)
+			}
+			for k, v := range m {
+				if payout, err := parsePayout(v.(string)); err == nil {
+					out = append(out, Model{
+						MatchModel: matchModel,
+						ID:         id.(string),
+						Type:       name,
+						Outcome:    k,
+						Value:      payout,
+					})
+				}
+			}
+		}
+	}
+	return out, nil
+}
+
+func Transform(r io.Reader, encoder model.Encoder) error {
 	decoder := json.NewDecoder(r)
-	encoder := json.NewEncoder(target)
 	for decoder.More() {
 		var odd Odd
 		if err := decoder.Decode(&odd); err != nil {
@@ -110,14 +123,7 @@ func Transform(r io.Reader, target io.WriteCloser) error {
 		}
 		for _, e := range odd {
 			for _, m := range e.Matches {
-				match, err := ParseMatchModel(m)
-				if err != nil {
-					return err
-				}
-				if err := encoder.Encode(match); err != nil {
-					return err
-				}
-				odds, err := ParseOddModel(m)
+				odds, err := parseOddModel(m)
 				if err != nil {
 					return err
 				}
