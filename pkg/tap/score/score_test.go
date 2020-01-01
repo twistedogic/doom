@@ -22,5 +22,4 @@ func TestUpdate(t *testing.T) {
 	if len(got) == 0 {
 		t.Fatal(got)
 	}
-	t.Log(got)
 }
