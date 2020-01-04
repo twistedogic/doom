@@ -61,11 +61,13 @@ func Open(t *testing.T, dir, name string, repeat int) *bytes.Buffer {
 	if err != nil {
 		t.Fatal(err)
 	}
-	content := make([]byte, 0, len(b)*repeat)
+	buf := new(bytes.Buffer)
 	for i := 0; i < repeat; i++ {
-		content = append(content, b...)
+		if _, err := buf.Write(b); err != nil {
+			t.Fatal(err)
+		}
 	}
-	return bytes.NewBuffer(content)
+	return buf
 }
 
 type MockTarget struct {

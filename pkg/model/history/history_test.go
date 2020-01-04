@@ -39,7 +39,6 @@ func TestTransform(t *testing.T) {
 				t.Fatal(err)
 			}
 			for k, v := range s.Content() {
-				t.Log(k)
 				if !strings.HasPrefix(k, string(Type)) {
 					t.Fatal(k)
 				}

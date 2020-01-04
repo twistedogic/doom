@@ -80,7 +80,6 @@ func (m Model) Item(i *model.Item) error {
 	}
 	date, err := time.Parse(csvDateFormat, m.MatchDate)
 	if err != nil {
-		fmt.Println(m.MatchDate)
 		return err
 	}
 	key := fmt.Sprintf(

@@ -22,7 +22,7 @@ func (m mockData) Item(i *Item) error {
 	return nil
 }
 
-func setupMockTransformer(t *testing.T, ttype Type, hasError bool) Transformer {
+func setupMockTransformFunc(t *testing.T, ttype Type, hasError bool) TransformFunc {
 	t.Helper()
 	transform := func(r io.Reader, e Encoder) error {
 		if hasError {
@@ -96,9 +96,9 @@ func TestModeler(t *testing.T) {
 		tc := cases[name]
 		t.Run(name, func(t *testing.T) {
 			s := testutil.NewMockStore(t, make(map[string][]byte), false)
-			transformers := make([]Transformer, 0, len(tc.transformers))
+			transformers := make([]TransformFunc, 0, len(tc.transformers))
 			for _, tt := range tc.transformers {
-				transformers = append(transformers, setupMockTransformer(
+				transformers = append(transformers, setupMockTransformFunc(
 					t, tt.ttype, tt.hasError,
 				))
 			}

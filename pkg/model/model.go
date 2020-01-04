@@ -26,7 +26,7 @@ type Encoder interface {
 	Encode(Model) error
 }
 
-type Transformer func(io.Reader, Encoder) error
+type TransformFunc func(io.Reader, Encoder) error
 
 type Modeler struct {
 	*bytes.Buffer
@@ -49,9 +49,10 @@ func (m Modeler) Encode(i Model) error {
 	return nil
 }
 
-func (m Modeler) Update(ctx context.Context, transformers ...Transformer) error {
+func (m Modeler) Update(ctx context.Context, transformers ...TransformFunc) error {
 	errCh := make(chan error)
-	wg := sync.WaitGroup{}
+	wg := new(sync.WaitGroup)
+	buffers := make([]io.Writer, 0, len(transformers))
 	go func() {
 		for i := range m.itemCh {
 			key := fmt.Sprintf("%s:%s", i.Type, i.Key)
@@ -62,15 +63,14 @@ func (m Modeler) Update(ctx context.Context, transformers ...Transformer) error 
 		errCh <- nil
 	}()
 	go func() {
-		wg.Wait()
-		close(m.itemCh)
+		<-ctx.Done()
+		errCh <- ctx.Err()
 	}()
-	buffers := make([]io.Writer, len(transformers))
-	for i, transform := range transformers {
+	for _, transform := range transformers {
 		buf := new(bytes.Buffer)
-		buffers[i] = buf
+		buffers = append(buffers, buf)
 		wg.Add(1)
-		go func(fn Transformer, r io.Reader, encoder Encoder) {
+		go func(fn TransformFunc, r io.Reader, encoder Encoder) {
 			defer wg.Done()
 			if err := fn(r, encoder); err != nil {
 				errCh <- err
@@ -78,18 +78,12 @@ func (m Modeler) Update(ctx context.Context, transformers ...Transformer) error 
 		}(transform, buf, m)
 	}
 	w := io.MultiWriter(buffers...)
-	go func() {
-		if _, err := io.Copy(w, m); err != nil {
-			errCh <- err
-		}
-	}()
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case err := <-errCh:
-			return err
-		}
+	if _, err := io.Copy(w, m); err != nil {
+		errCh <- err
 	}
-	return nil
+	go func() {
+		wg.Wait()
+		close(m.itemCh)
+	}()
+	return <-errCh
 }

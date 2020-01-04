@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fatih/structs"
 	"github.com/twistedogic/doom/pkg/model"
 	"github.com/twistedogic/doom/testutil"
 )
@@ -46,9 +45,6 @@ func TestTransform(t *testing.T) {
 				var model Model
 				if err := json.Unmarshal(v, &model); err != nil {
 					t.Fatal(err)
-				}
-				if structs.HasZero(model) {
-					t.Fatal(model)
 				}
 			}
 		})
