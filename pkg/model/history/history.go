@@ -2,13 +2,13 @@ package history
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 	"time"
 
 	"github.com/fatih/structs"
+	json "github.com/json-iterator/go"
 	"github.com/mitchellh/mapstructure"
 	"github.com/twistedogic/doom/pkg/model"
 )

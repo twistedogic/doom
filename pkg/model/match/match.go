@@ -1,11 +1,11 @@
 package match
 
 import (
-	"encoding/json"
 	"io"
 	"strconv"
 	"time"
 
+	json "github.com/json-iterator/go"
 	"github.com/twistedogic/doom/pkg/model"
 )
 

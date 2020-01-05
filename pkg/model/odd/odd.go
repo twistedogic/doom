@@ -1,7 +1,6 @@
 package odd
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"strconv"
@@ -9,6 +8,7 @@ import (
 	"time"
 
 	"github.com/fatih/structs"
+	json "github.com/json-iterator/go"
 	"github.com/twistedogic/doom/pkg/model"
 )
 

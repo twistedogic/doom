@@ -1,10 +1,10 @@
 package detail
 
 import (
-	"encoding/json"
 	"io"
 	"strconv"
 
+	json "github.com/json-iterator/go"
 	"github.com/twistedogic/doom/pkg/model"
 )
 
