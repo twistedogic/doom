@@ -16,52 +16,41 @@ const (
 	DONE  Status = "DONE"
 )
 
-func TimeIt() func() time.Duration {
-	start := time.Now()
-	return func() time.Duration {
-		return time.Since(start)
-	}
-}
-
 type Job struct {
-	Timeout time.Duration
-	Name    string
-	Src     tap.Tap
-	Dst     io.WriteCloser
+	Name     string
+	Src      tap.Tap
+	Dst      io.WriteCloser
+	Interval time.Duration
 }
 
-func New(name string, src tap.Tap, dst io.WriteCloser, timeout time.Duration) *Job {
+func New(name string, src tap.Tap, dst io.WriteCloser, interval time.Duration) *Job {
 	return &Job{
-		Name:    name,
-		Src:     src,
-		Dst:     dst,
-		Timeout: timeout,
+		Name:     name,
+		Src:      src,
+		Dst:      dst,
+		Interval: interval,
 	}
 }
 
-func (j *Job) Set(src tap.Tap, dst io.WriteCloser) {
-	j.SetSrc(src)
-	j.SetDst(dst)
-}
-
-func (j *Job) SetSrc(src tap.Tap) {
-	j.Src = src
-}
-
-func (j *Job) SetDst(dst io.WriteCloser) {
-	j.Dst = dst
-}
-
-func (j *Job) Execute() error {
-	ctx, _ := context.WithTimeout(context.Background(), j.Timeout)
+func (j Job) Execute(ctx context.Context) error {
 	return j.Src.Update(ctx, j.Dst)
 }
 
-func (j *Job) Run() {
-	timeit := TimeIt()
-	if err := j.Execute(); err != nil {
-		log.Printf("%s %s %s %v", ERROR, j.Name, timeit(), err)
-		return
+func (j Job) Run(ctx context.Context) error {
+	ticker := time.NewTicker(j.Interval)
+	for {
+		select {
+		case <-ticker.C:
+			runCtx, cancel := context.WithTimeout(ctx, j.Interval)
+			defer cancel()
+			if err := j.Execute(runCtx); err != nil {
+				log.Printf("%s %s %v", ERROR, j.Name, err)
+			} else {
+				log.Printf("%s %s", DONE, j.Name)
+			}
+		case <-ctx.Done():
+			return nil
+		}
 	}
-	log.Printf("%s %s %s", DONE, j.Name, timeit())
+	return nil
 }

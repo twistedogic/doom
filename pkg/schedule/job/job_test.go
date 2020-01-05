@@ -30,11 +30,22 @@ func NewMockTap(t *testing.T) mockTap {
 
 func (m mockTap) Update(context.Context, io.WriteCloser) error { return nil }
 
-func TestJob(t *testing.T) {
+func TestJob_Execute(t *testing.T) {
 	src := NewMockTap(t)
 	dst := NewMockTarget(t)
-	job := New("test", src, dst, time.Hour)
-	if err := job.Execute(); err != nil {
+	job := New("test", src, dst, time.Millisecond)
+	if err := job.Execute(context.TODO()); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestJob_Run(t *testing.T) {
+	src := NewMockTap(t)
+	dst := NewMockTarget(t)
+	job := New("test", src, dst, time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	defer cancel()
+	if err := job.Run(ctx); err != nil {
 		t.Fatal(err)
 	}
 }

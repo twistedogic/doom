@@ -1,36 +1,43 @@
 package schedule
 
 import (
-	"io"
+	"context"
 	"log"
-	"net/http"
-
-	json "github.com/json-iterator/go"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/robfig/cron"
+	"sync"
 )
 
+type Job interface {
+	Run(context.Context) error
+}
+
 type Scheduler struct {
-	*cron.Cron
+	entries []Job
 }
 
-func New() *Scheduler {
-	return &Scheduler{cron.New()}
+func New(entries ...Job) Scheduler {
+	return Scheduler{entries}
 }
 
-func (s *Scheduler) Report(w io.Writer) error {
-	entries := s.Entries()
-	return json.NewEncoder(w).Encode(entries)
-}
-
-func (s *Scheduler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	if req.URL.Path == "/metrics" {
-		promhttp.Handler().ServeHTTP(res, req)
-		return
+func (s Scheduler) Start(ctx context.Context) error {
+	wg := new(sync.WaitGroup)
+	errCh := make(chan error)
+	defer close(errCh)
+	go func() {
+		for err := range errCh {
+			log.Println(err)
+		}
+	}()
+	for _, job := range s.entries {
+		jobCtx, cancel := context.WithCancel(ctx)
+		defer cancel()
+		wg.Add(1)
+		go func(c context.Context, j Job) {
+			defer wg.Done()
+			if err := j.Run(c); err != nil {
+				errCh <- err
+			}
+		}(jobCtx, job)
 	}
-	res.Header().Set("Content-Type", "application/json")
-	if err := s.Report(res); err != nil {
-		log.Println(err)
-		http.Error(res, err.Error(), 500)
-	}
+	wg.Wait()
+	return nil
 }
