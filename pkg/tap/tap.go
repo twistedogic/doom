@@ -6,5 +6,5 @@ import (
 )
 
 type Tap interface {
-	Update(context.Context, io.WriteCloser) error
+	Update(context.Context, io.Writer) error
 }

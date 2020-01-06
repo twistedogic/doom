@@ -74,9 +74,8 @@ func getMatchID(r io.Reader, ch chan int) error {
 	return nil
 }
 
-func (c Client) Update(ctx context.Context, w io.WriteCloser) error {
-	defer w.Close()
-	wg := &sync.WaitGroup{}
+func (c Client) Update(ctx context.Context, w io.Writer) error {
+	wg := new(sync.WaitGroup)
 	matchIDCh := make(chan int)
 	errCh := make(chan error)
 	for i := maxOffset; i <= 0; i++ {

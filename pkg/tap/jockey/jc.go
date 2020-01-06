@@ -31,9 +31,8 @@ func (c Client) GenerateURL() string {
 	return fmt.Sprintf("%s%s", c.BaseURL, requestPath)
 }
 
-func (c Client) Update(ctx context.Context, w io.WriteCloser) error {
+func (c Client) Update(ctx context.Context, w io.Writer) error {
 	errCh := make(chan error)
-	defer w.Close()
 	go func() {
 		errCh <- c.GetResponse(c.GenerateURL(), w)
 	}()

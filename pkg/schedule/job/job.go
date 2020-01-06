@@ -19,11 +19,11 @@ const (
 type Job struct {
 	Name     string
 	Src      tap.Tap
-	Dst      io.WriteCloser
+	Dst      io.Writer
 	Interval time.Duration
 }
 
-func New(name string, src tap.Tap, dst io.WriteCloser, interval time.Duration) *Job {
+func New(name string, src tap.Tap, dst io.Writer, interval time.Duration) *Job {
 	return &Job{
 		Name:     name,
 		Src:      src,

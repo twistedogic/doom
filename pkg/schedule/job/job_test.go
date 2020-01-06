@@ -16,7 +16,6 @@ func NewMockTarget(t *testing.T) mockTarget {
 	return mockTarget{t}
 }
 
-func (m mockTarget) Close() error              { return nil }
 func (m mockTarget) Write([]byte) (int, error) { return 0, nil }
 
 type mockTap struct {
@@ -28,7 +27,7 @@ func NewMockTap(t *testing.T) mockTap {
 	return mockTap{t}
 }
 
-func (m mockTap) Update(context.Context, io.WriteCloser) error { return nil }
+func (m mockTap) Update(context.Context, io.Writer) error { return nil }
 
 func TestJob_Execute(t *testing.T) {
 	src := NewMockTap(t)

@@ -74,10 +74,9 @@ func (c *Client) FetchLink(link string, outCh chan string) error {
 	return <-errCh
 }
 
-func (c *Client) Update(ctx context.Context, w io.WriteCloser) error {
+func (c *Client) Update(ctx context.Context, w io.Writer) error {
 	c.clearVisited()
-	defer w.Close()
-	wg := &sync.WaitGroup{}
+	wg := new(sync.WaitGroup)
 	errCh := make(chan error)
 	linkCh := make(chan string)
 	wg.Add(1)
