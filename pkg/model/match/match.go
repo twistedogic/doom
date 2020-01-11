@@ -1,7 +1,6 @@
 package match
 
 import (
-	"io"
 	"strconv"
 	"time"
 
@@ -30,30 +29,27 @@ func (m Model) Item(i *model.Item) error {
 	return nil
 }
 
-func Transform(r io.Reader, encoder model.Encoder) error {
-	decoder := json.NewDecoder(r)
-	for decoder.More() {
-		var feed Feed
-		if err := decoder.Decode(&feed); err != nil {
-			return err
-		}
-		for _, doc := range feed.Doc {
-			for _, datum := range doc.Data {
-				for _, cat := range datum.Realcategories {
-					for _, tournament := range cat.Tournaments {
-						for _, match := range tournament.Matches {
-							lastUpdate := time.Unix(int64(match.UpdatedUts), 0)
-							m := Model{
-								ID:          match.ID,
-								Home:        match.Teams.Home.Name,
-								Away:        match.Teams.Away.Name,
-								Periods:     match.Periods,
-								Result:      match.Result,
-								LastUpdated: lastUpdate,
-							}
-							if err := encoder.Encode(m); err != nil {
-								return err
-							}
+func Transform(b []byte, encoder model.Encoder) error {
+	var feed Feed
+	if err := json.Unmarshal(b, &feed); err != nil {
+		return err
+	}
+	for _, doc := range feed.Doc {
+		for _, datum := range doc.Data {
+			for _, cat := range datum.Realcategories {
+				for _, tournament := range cat.Tournaments {
+					for _, match := range tournament.Matches {
+						lastUpdate := time.Unix(int64(match.UpdatedUts), 0)
+						m := Model{
+							ID:          match.ID,
+							Home:        match.Teams.Home.Name,
+							Away:        match.Teams.Away.Name,
+							Periods:     match.Periods,
+							Result:      match.Result,
+							LastUpdated: lastUpdate,
+						}
+						if err := encoder.Encode(m); err != nil {
+							return err
 						}
 					}
 				}

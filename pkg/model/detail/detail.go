@@ -1,7 +1,6 @@
 package detail
 
 import (
-	"io"
 	"strconv"
 
 	json "github.com/json-iterator/go"
@@ -25,26 +24,23 @@ func (m Model) Item(i *model.Item) error {
 	return nil
 }
 
-func Transform(r io.Reader, encoder model.Encoder) error {
-	decoder := json.NewDecoder(r)
-	for decoder.More() {
-		var feed Detail
-		if err := decoder.Decode(&feed); err != nil {
-			return err
+func Transform(b []byte, encoder model.Encoder) error {
+	var feed Detail
+	if err := json.Unmarshal(b, &feed); err != nil {
+		return err
+	}
+	for _, doc := range feed.Doc {
+		values := make([]Value, 0, len(doc.Data.Values))
+		for _, v := range doc.Data.Values {
+			values = append(values, v)
 		}
-		for _, doc := range feed.Doc {
-			values := make([]Value, 0, len(doc.Data.Values))
-			for _, v := range doc.Data.Values {
-				values = append(values, v)
-			}
-			model := Model{
-				MatchID: doc.Data.MatchID,
-				Teams:   doc.Data.Teams,
-				Values:  values,
-			}
-			if err := encoder.Encode(model); err != nil {
-				return err
-			}
+		model := Model{
+			MatchID: doc.Data.MatchID,
+			Teams:   doc.Data.Teams,
+			Values:  values,
+		}
+		if err := encoder.Encode(model); err != nil {
+			return err
 		}
 	}
 	return nil

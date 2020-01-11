@@ -2,7 +2,6 @@ package odd
 
 import (
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -114,23 +113,20 @@ func parseOddModel(match Match) ([]Model, error) {
 	return out, nil
 }
 
-func Transform(r io.Reader, encoder model.Encoder) error {
-	decoder := json.NewDecoder(r)
-	for decoder.More() {
-		var odd Odd
-		if err := decoder.Decode(&odd); err != nil {
-			return err
-		}
-		for _, e := range odd {
-			for _, m := range e.Matches {
-				odds, err := parseOddModel(m)
-				if err != nil {
+func Transform(b []byte, encoder model.Encoder) error {
+	var odd Odd
+	if err := json.Unmarshal(b, &odd); err != nil {
+		return err
+	}
+	for _, e := range odd {
+		for _, m := range e.Matches {
+			odds, err := parseOddModel(m)
+			if err != nil {
+				return err
+			}
+			for _, o := range odds {
+				if err := encoder.Encode(o); err != nil {
 					return err
-				}
-				for _, o := range odds {
-					if err := encoder.Encode(o); err != nil {
-						return err
-					}
 				}
 			}
 		}

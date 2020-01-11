@@ -1,11 +1,8 @@
 package model
 
 import (
-	"bytes"
-	"context"
 	"fmt"
-	"io"
-	"sync"
+	"log"
 
 	"github.com/twistedogic/doom/pkg/store"
 )
@@ -26,18 +23,15 @@ type Encoder interface {
 	Encode(Model) error
 }
 
-type TransformFunc func(io.Reader, Encoder) error
+type TransformFunc func([]byte, Encoder) error
 
 type Modeler struct {
-	*bytes.Buffer
-	s      store.Store
-	itemCh chan Item
+	store        store.Store
+	transformers []TransformFunc
 }
 
-func New(s store.Store) Modeler {
-	buf := new(bytes.Buffer)
-	itemCh := make(chan Item)
-	return Modeler{buf, s, itemCh}
+func New(s store.Store, transformers ...TransformFunc) Modeler {
+	return Modeler{s, transformers}
 }
 
 func (m Modeler) Encode(i Model) error {
@@ -45,45 +39,16 @@ func (m Modeler) Encode(i Model) error {
 	if err := i.Item(&item); err != nil {
 		return err
 	}
-	m.itemCh <- item
-	return nil
+	key := fmt.Sprintf("%s:%s", item.Type, item.Key)
+	return m.store.Set(key, item.Data)
 }
 
-func (m Modeler) Update(ctx context.Context, transformers ...TransformFunc) error {
-	errCh := make(chan error)
-	wg := new(sync.WaitGroup)
-	buffers := make([]io.Writer, 0, len(transformers))
-	go func() {
-		for i := range m.itemCh {
-			key := fmt.Sprintf("%s:%s", i.Type, i.Key)
-			if err := m.s.Set(key, i.Data); err != nil {
-				errCh <- err
-			}
+func (m Modeler) Write(b []byte) (int, error) {
+	n := len(b)
+	for _, fn := range m.transformers {
+		if err := fn(b, m); err != nil {
+			log.Println(err)
 		}
-		errCh <- nil
-	}()
-	go func() {
-		<-ctx.Done()
-		errCh <- ctx.Err()
-	}()
-	for _, transform := range transformers {
-		buf := new(bytes.Buffer)
-		buffers = append(buffers, buf)
-		wg.Add(1)
-		go func(fn TransformFunc, r io.Reader, encoder Encoder) {
-			defer wg.Done()
-			if err := fn(r, encoder); err != nil {
-				errCh <- err
-			}
-		}(transform, buf, m)
 	}
-	w := io.MultiWriter(buffers...)
-	if _, err := io.Copy(w, m); err != nil {
-		errCh <- err
-	}
-	go func() {
-		wg.Wait()
-		close(m.itemCh)
-	}()
-	return <-errCh
+	return n, nil
 }

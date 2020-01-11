@@ -2,7 +2,6 @@ package history
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"path"
@@ -108,7 +107,7 @@ func (c *Client) Update(ctx context.Context, w io.Writer) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("time out")
+			return ctx.Err()
 		case err := <-errCh:
 			return err
 		}

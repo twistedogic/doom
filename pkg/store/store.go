@@ -12,7 +12,7 @@ type Store interface {
 	Scan(...string) ([]string, error)
 }
 
-func Transform(src, dst Store) error {
+func Transfer(src, dst Store) error {
 	keys, err := src.Scan()
 	if err != nil {
 		return err

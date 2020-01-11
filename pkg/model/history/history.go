@@ -1,6 +1,7 @@
 package history
 
 import (
+	"bytes"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -92,8 +93,8 @@ func (m Model) Item(i *model.Item) error {
 	return nil
 }
 
-func Transform(r io.Reader, encoder model.Encoder) error {
-	reader := csv.NewReader(r)
+func Transform(b []byte, encoder model.Encoder) error {
+	reader := csv.NewReader(bytes.NewBuffer(b))
 	indexMap := make(map[string]int)
 	fieldMap := make(map[string]string)
 	for _, field := range structs.Fields(Model{}) {

@@ -1,12 +1,9 @@
 package model
 
 import (
-	"bufio"
-	"context"
+	"bytes"
 	"errors"
-	"io"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/twistedogic/doom/testutil"
@@ -24,19 +21,11 @@ func (m mockData) Item(i *Item) error {
 
 func setupMockTransformFunc(t *testing.T, ttype Type, hasError bool) TransformFunc {
 	t.Helper()
-	transform := func(r io.Reader, e Encoder) error {
+	transform := func(b []byte, e Encoder) error {
 		if hasError {
 			return errors.New("error")
 		}
-		buf := bufio.NewReader(r)
-		for {
-			line, _, err := buf.ReadLine()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return err
-			}
+		for _, line := range bytes.Split(b, []byte("\n")) {
 			data := mockData{ttype, line}
 			if err := e.Encode(data); err != nil {
 				return err
@@ -58,7 +47,7 @@ func TestModeler(t *testing.T) {
 		want     map[string][]byte
 	}{
 		"single transformer": {
-			input: []byte("line1\nline2\nline3\n"),
+			input: []byte("line1\nline2\nline3"),
 			transformers: []struct {
 				ttype    Type
 				hasError bool
@@ -73,7 +62,7 @@ func TestModeler(t *testing.T) {
 			},
 		},
 		"multi-transformers": {
-			input: []byte("line1\nline2\nline3\n"),
+			input: []byte("line1\nline2\nline3"),
 			transformers: []struct {
 				ttype    Type
 				hasError bool
@@ -102,13 +91,8 @@ func TestModeler(t *testing.T) {
 					t, tt.ttype, tt.hasError,
 				))
 			}
-			m := New(s)
-			ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
-			defer cancel()
+			m := New(s, transformers...)
 			if _, err := m.Write(tc.input); err != nil {
-				t.Fatal(err)
-			}
-			if err := m.Update(ctx, transformers...); (err != nil) != tc.hasError {
 				t.Fatal(err)
 			}
 			if diff := cmp.Diff(s.Content(), tc.want); diff != "" {

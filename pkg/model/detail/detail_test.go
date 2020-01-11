@@ -1,12 +1,12 @@
 package detail
 
 import (
-	"context"
+	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/fatih/structs"
 	"github.com/twistedogic/doom/pkg/model"
@@ -18,26 +18,24 @@ const testdataPath = "../../../testdata"
 func TestTransform(t *testing.T) {
 	cases := map[string]struct {
 		filename string
-		repeat   int
 	}{
 		"base": {
 			filename: "details",
-			repeat:   2,
 		},
 	}
 	for name := range cases {
 		tc := cases[name]
 		t.Run(name, func(t *testing.T) {
-			f := testutil.Open(t, testdataPath, tc.filename, tc.repeat)
+			buf := new(bytes.Buffer)
+			log.SetOutput(buf)
+			f := testutil.Open(t, testdataPath, tc.filename, 1)
 			s := testutil.NewMockStore(t, make(map[string][]byte), false)
-			m := model.New(s)
-			ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
-			defer cancel()
+			m := model.New(s, Transform)
 			if _, err := io.Copy(m, f); err != nil {
 				t.Fatal(err)
 			}
-			if err := m.Update(ctx, Transform); err != nil {
-				t.Fatal(err)
+			if len(buf.Bytes()) != 0 {
+				t.Fatal(buf.String())
 			}
 			for k, v := range s.Content() {
 				if !strings.HasPrefix(k, string(Type)) {
