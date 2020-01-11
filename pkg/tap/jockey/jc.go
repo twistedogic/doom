@@ -34,13 +34,12 @@ func (c Client) generateURL() string {
 func (c Client) Update(ctx context.Context, w io.Writer) error {
 	errCh := make(chan error)
 	go func() {
+		<-ctx.Done()
+		errCh <- ctx.Err()
+	}()
+
+	go func() {
 		errCh <- c.GetResponse(c.generateURL(), w)
 	}()
-	select {
-	case err := <-errCh:
-		return err
-	case <-ctx.Done():
-		return fmt.Errorf("timeout")
-	}
-	return nil
+	return <-errCh
 }

@@ -80,13 +80,17 @@ func (c *Client) Update(ctx context.Context, w io.Writer) error {
 	linkCh := make(chan string)
 	wg.Add(1)
 	go func() {
+		defer wg.Done()
+		linkCh <- c.BaseURL
+	}()
+	go func() {
+		<-ctx.Done()
+		errCh <- ctx.Err()
+	}()
+	go func() {
 		wg.Wait()
 		close(linkCh)
 		errCh <- nil
-	}()
-	go func() {
-		defer wg.Done()
-		linkCh <- c.BaseURL
 	}()
 	for l := range linkCh {
 		wg.Add(1)
@@ -104,13 +108,5 @@ func (c *Client) Update(ctx context.Context, w io.Writer) error {
 			}
 		}(l)
 	}
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case err := <-errCh:
-			return err
-		}
-	}
-	return nil
+	return <-errCh
 }

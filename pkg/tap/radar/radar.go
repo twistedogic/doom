@@ -78,6 +78,10 @@ func (c Client) Update(ctx context.Context, w io.Writer) error {
 	wg := new(sync.WaitGroup)
 	matchIDCh := make(chan int)
 	errCh := make(chan error)
+	go func() {
+		<-ctx.Done()
+		errCh <- ctx.Err()
+	}()
 	for i := maxOffset; i <= 0; i++ {
 		wg.Add(1)
 		go func(offset int) {
@@ -107,11 +111,5 @@ func (c Client) Update(ctx context.Context, w io.Writer) error {
 		}
 		errCh <- nil
 	}()
-	select {
-	case <-ctx.Done():
-		return fmt.Errorf("timeout")
-	case err := <-errCh:
-		return err
-	}
-	return nil
+	return <-errCh
 }
