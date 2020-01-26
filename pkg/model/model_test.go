@@ -92,7 +92,7 @@ func TestModeler(t *testing.T) {
 				))
 			}
 			m := New(s, transformers...)
-			if _, err := m.Write(tc.input); err != nil {
+			if err := m.Write(tc.input); err != nil {
 				t.Fatal(err)
 			}
 			if diff := cmp.Diff(s.Content(), tc.want); diff != "" {
