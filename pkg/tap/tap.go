@@ -2,9 +2,12 @@ package tap
 
 import (
 	"context"
-	"io"
 )
 
+type Target interface {
+	Write([]byte) error
+}
+
 type Tap interface {
-	Update(context.Context, io.Writer) error
+	Update(context.Context, Target) error
 }

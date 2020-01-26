@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/twistedogic/doom/testutil"
 )
 
 func Setup(t *testing.T, body []byte) *httptest.Server {
@@ -43,5 +45,16 @@ func TestGetResponse(t *testing.T) {
 	}
 	if string(payload) != string(buf.Bytes()) {
 		t.Fail()
+	}
+}
+
+func TestWriteToTarget(t *testing.T) {
+	payload := []byte(`something`)
+	ts := Setup(t, payload)
+	defer ts.Close()
+	target := testutil.NewMockTarget(t, false, false)
+	client := New(0)
+	if err := client.WriteToTarget(ts.URL, target); err != nil {
+		t.Fatal(err)
 	}
 }

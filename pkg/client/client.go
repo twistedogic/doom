@@ -2,9 +2,11 @@ package client
 
 import (
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 
+	"github.com/twistedogic/doom/pkg/tap"
 	"go.uber.org/ratelimit"
 )
 
@@ -32,12 +34,10 @@ func (c Client) Request(req *http.Request, w io.Writer) error {
 	log.Printf("%s %s", req.Method, req.URL)
 	res, err := c.Do(req)
 	if err != nil {
-		log.Print(err)
 		return err
 	}
 	defer res.Body.Close()
 	if _, err := io.Copy(w, res.Body); err != nil {
-		log.Print(err)
 		return err
 	}
 	return nil
@@ -49,4 +49,19 @@ func (c Client) GetResponse(u string, w io.Writer) error {
 		return err
 	}
 	return c.Request(req, w)
+}
+
+func (c Client) WriteToTarget(u string, target tap.Target) error {
+	c.Take()
+	log.Printf("GET %s", u)
+	res, err := c.Get(u)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	b, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+	return target.Write(b)
 }

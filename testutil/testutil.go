@@ -71,7 +71,6 @@ func Open(t *testing.T, dir, name string, repeat int) *bytes.Buffer {
 }
 
 type MockTarget struct {
-	*bytes.Buffer
 	t        *testing.T
 	showLog  bool
 	hasError bool
@@ -79,16 +78,10 @@ type MockTarget struct {
 
 func NewMockTarget(t *testing.T, showLog, hasError bool) MockTarget {
 	t.Helper()
-	return MockTarget{&bytes.Buffer{}, t, showLog, hasError}
+	return MockTarget{t, showLog, hasError}
 }
 
-func (m MockTarget) Close() error {
-	if m.showLog {
-		m.t.Log(string(m.Bytes()))
-	}
-	if m.hasError {
-		return TestError
-	}
+func (m MockTarget) Write([]byte) error {
 	return nil
 }
 
