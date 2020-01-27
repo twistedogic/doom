@@ -2,7 +2,6 @@ package job
 
 import (
 	"context"
-	"io"
 	"log"
 	"time"
 
@@ -19,11 +18,11 @@ const (
 type Job struct {
 	Name     string
 	Src      tap.Tap
-	Dst      io.Writer
+	Dst      tap.Target
 	Interval time.Duration
 }
 
-func New(name string, src tap.Tap, dst io.Writer, interval time.Duration) *Job {
+func New(name string, src tap.Tap, dst tap.Target, interval time.Duration) *Job {
 	return &Job{
 		Name:     name,
 		Src:      src,
