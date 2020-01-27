@@ -3,7 +3,7 @@ package match
 import (
 	"bytes"
 	"encoding/json"
-	"io"
+	"io/ioutil"
 	"log"
 	"strings"
 	"testing"
@@ -30,7 +30,11 @@ func TestTransform(t *testing.T) {
 			f := testutil.Open(t, testdataPath, tc.filename, 1)
 			s := testutil.NewMockStore(t, make(map[string][]byte), false)
 			m := model.New(s, Transform)
-			if _, err := io.Copy(m, f); err != nil {
+			b, err := ioutil.ReadAll(f)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := m.Write(b); err != nil {
 				t.Fatal(err)
 			}
 			if len(buf.Bytes()) != 0 {
