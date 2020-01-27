@@ -1,8 +1,13 @@
 package jockey
 
 import (
+	"context"
 	"testing"
+
+	"github.com/twistedogic/doom/testutil"
 )
+
+const testdataPath = "../../../testdata"
 
 func Test_Client_generateURL(t *testing.T) {
 	cases := map[string]struct {
@@ -24,4 +29,21 @@ func Test_Client_generateURL(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUpdate(t *testing.T) {
+	ts := testutil.Setup(t, testdataPath)
+	defer ts.Close()
+	ctx := context.TODO()
+	target := testutil.NewMockTarget(t, false, false)
+	for i := range BetTypes {
+		bet := BetTypes[i]
+		t.Run(bet, func(t *testing.T) {
+			f := New(ts.URL, bet, -1)
+			if err := f.Update(ctx, target); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+
 }

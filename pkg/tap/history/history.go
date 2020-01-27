@@ -2,12 +2,12 @@ package history
 
 import (
 	"context"
-	"io"
-	"net/http"
 	"path"
 	"sync"
 
+	"github.com/twistedogic/doom/pkg/client"
 	"github.com/twistedogic/doom/pkg/client/crawl"
+	"github.com/twistedogic/doom/pkg/tap"
 )
 
 const (
@@ -15,42 +15,34 @@ const (
 )
 
 type Client struct {
-	sync.Mutex
+	client.Client
 	BaseURL string
 	visited *sync.Map
 }
 
-func New(u string) *Client {
-	return &Client{BaseURL: u}
+func New(u string, rate int) *Client {
+	c := client.New(rate)
+	visited := new(sync.Map)
+	return &Client{c, u, visited}
+}
+
+func (c *Client) resetVisited() {
+	c.visited = new(sync.Map)
 }
 
 func (c *Client) isVisited(u string) bool {
 	if c.visited == nil {
-		c.visited = &sync.Map{}
+		c.resetVisited()
 	}
 	_, loaded := c.visited.LoadOrStore(u, true)
 	return loaded
 }
 
-func (c *Client) clearVisited() {
-	c.visited = &sync.Map{}
-}
-
-func (c *Client) GetCSV(u string, w io.Writer) error {
-	c.Lock()
-	defer c.Unlock()
+func (c *Client) GetCSV(u string, target tap.Target) error {
 	if c.isVisited(u) {
 		return nil
 	}
-	res, err := http.Get(u)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	if _, err := io.Copy(w, res.Body); err != nil {
-		return err
-	}
-	return nil
+	return c.WriteToTarget(u, target)
 }
 
 func (c *Client) FetchLink(link string, outCh chan string) error {
@@ -73,8 +65,8 @@ func (c *Client) FetchLink(link string, outCh chan string) error {
 	return <-errCh
 }
 
-func (c *Client) Update(ctx context.Context, w io.Writer) error {
-	c.clearVisited()
+func (c *Client) Update(ctx context.Context, target tap.Target) error {
+	c.resetVisited()
 	wg := new(sync.WaitGroup)
 	errCh := make(chan error)
 	linkCh := make(chan string)
@@ -98,7 +90,7 @@ func (c *Client) Update(ctx context.Context, w io.Writer) error {
 			defer wg.Done()
 			switch path.Ext(link) {
 			case ".csv":
-				if err := c.GetCSV(link, w); err != nil {
+				if err := c.GetCSV(link, target); err != nil {
 					errCh <- err
 				}
 			default:

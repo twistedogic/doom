@@ -3,9 +3,9 @@ package jockey
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/twistedogic/doom/pkg/client"
+	"github.com/twistedogic/doom/pkg/tap"
 )
 
 const (
@@ -31,15 +31,14 @@ func (c Client) generateURL() string {
 	return fmt.Sprintf("%s%s", c.BaseURL, requestPath)
 }
 
-func (c Client) Update(ctx context.Context, w io.Writer) error {
+func (c Client) Update(ctx context.Context, target tap.Target) error {
 	errCh := make(chan error)
 	go func() {
 		<-ctx.Done()
 		errCh <- ctx.Err()
 	}()
-
 	go func() {
-		errCh <- c.GetResponse(c.generateURL(), w)
+		errCh <- c.WriteToTarget(c.generateURL(), target)
 	}()
 	return <-errCh
 }

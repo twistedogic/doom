@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/twistedogic/doom/pkg/client"
+	"github.com/twistedogic/doom/pkg/tap"
 )
 
 const (
@@ -35,14 +36,19 @@ func (c Client) GenerateURL(path string, id int) string {
 	return fmt.Sprintf("%s%s", c.BaseURL, requestPath)
 }
 
-func (c Client) GetFeed(offset int, w io.Writer) error {
+func (c Client) getFeed(offset int, w io.Writer) error {
 	u := c.GenerateURL(FullFeedPath, offset)
 	return c.GetResponse(u, w)
 }
 
-func (c Client) GetDetail(id int, w io.Writer) error {
+func (c Client) GetFeed(offset int, target tap.Target) error {
+	u := c.GenerateURL(FullFeedPath, offset)
+	return c.WriteToTarget(u, target)
+}
+
+func (c Client) GetDetail(id int, target tap.Target) error {
 	u := c.GenerateURL(DetailPath, id)
-	return c.GetResponse(u, w)
+	return c.WriteToTarget(u, target)
 }
 
 func getMatchID(r io.Reader, ch chan int) error {
@@ -74,7 +80,7 @@ func getMatchID(r io.Reader, ch chan int) error {
 	return nil
 }
 
-func (c Client) Update(ctx context.Context, w io.Writer) error {
+func (c Client) Update(ctx context.Context, target tap.Target) error {
 	wg := new(sync.WaitGroup)
 	matchIDCh := make(chan int)
 	errCh := make(chan error)
@@ -86,13 +92,12 @@ func (c Client) Update(ctx context.Context, w io.Writer) error {
 		wg.Add(1)
 		go func(offset int) {
 			defer wg.Done()
-			buf := &bytes.Buffer{}
-			if err := c.GetFeed(offset, buf); err != nil {
+			buf := new(bytes.Buffer)
+			if err := c.getFeed(offset, buf); err != nil {
 				errCh <- err
 				return
 			}
-			tee := io.TeeReader(buf, w)
-			if err := getMatchID(tee, matchIDCh); err != nil {
+			if err := getMatchID(buf, matchIDCh); err != nil {
 				errCh <- err
 				return
 			}
@@ -104,7 +109,7 @@ func (c Client) Update(ctx context.Context, w io.Writer) error {
 	}()
 	go func() {
 		for id := range matchIDCh {
-			if err := c.GetDetail(id, w); err != nil {
+			if err := c.GetDetail(id, target); err != nil {
 				errCh <- err
 				return
 			}

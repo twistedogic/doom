@@ -75,7 +75,7 @@ func TestFetchLink(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ts := setup(t, "csv", tc.php)
 			defer ts.Close()
-			client := New(ts.URL)
+			client := New(ts.URL, -1)
 			ch := make(chan string)
 			go func() {
 				defer close(ch)
@@ -98,7 +98,7 @@ func TestUpdate(t *testing.T) {
 	ts := setup(t, "csv", php)
 	target := testutil.NewMockTarget(t, true, false)
 	defer ts.Close()
-	client := New(ts.URL)
+	client := New(ts.URL, -1)
 	ctx := context.Background()
 	if err := client.Update(ctx, target); err != nil {
 		t.Fatal(err)
