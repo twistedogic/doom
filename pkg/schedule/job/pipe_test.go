@@ -19,7 +19,7 @@ func TestPipe(t *testing.T) {
 		odd.Transform,
 	}
 	taps := []tap.Tap{
-		jockey.New(jockey.Base, "fha", 5),
+		jockey.New(jockey.Base, "had", 5),
 	}
 	s := testutil.NewMockStore(t, make(map[string][]byte), false)
 	dst := model.New(s, transformers...)

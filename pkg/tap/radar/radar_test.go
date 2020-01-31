@@ -1,6 +1,7 @@
 package radar
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"path/filepath"
@@ -61,8 +62,12 @@ func TestGetFeed(t *testing.T) {
 	defer ts.Close()
 	f := New(ts.URL, -1)
 	target := testutil.NewMockTarget(t, false, false)
-	if err := f.GetFeed(0, target); err != nil {
+	buf := new(bytes.Buffer)
+	if err := f.GetFeed(0, buf, target); err != nil {
 		t.Fatal(err)
+	}
+	if len(buf.Bytes()) == 0 {
+		t.Fail()
 	}
 }
 

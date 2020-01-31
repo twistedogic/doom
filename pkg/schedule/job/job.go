@@ -40,8 +40,7 @@ func (j Job) Run(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C:
-			runCtx, cancel := context.WithTimeout(ctx, j.Interval)
-			defer cancel()
+			runCtx, _ := context.WithTimeout(ctx, j.Interval)
 			if err := j.Execute(runCtx); err != nil {
 				log.Printf("%s %s %v", ERROR, j.Name, err)
 			} else {

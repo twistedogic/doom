@@ -45,8 +45,10 @@ func (m Modeler) Encode(i Model) error {
 func (m Modeler) Write(b []byte) error {
 	tranformed := false
 	for _, fn := range m.transformers {
-		if err := fn(b, m); err == nil {
+		err := fn(b, m)
+		if err == nil {
 			tranformed = true
+			continue
 		}
 	}
 	if !tranformed {
