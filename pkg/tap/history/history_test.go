@@ -57,33 +57,27 @@ func setup(t *testing.T, csv string, php []byte) *httptest.Server {
 	return httptest.NewServer(handler)
 }
 
-func TestFetchLink(t *testing.T) {
+func TestIsSameDomain(t *testing.T) {
 	cases := map[string]struct {
-		php  []byte
-		want []string
+		urls []string
+		want bool
 	}{
-		"base": {
-			php: []byte(`<html>
-				<a href="a.php">a</a>
-				<a href="a.csv">a</a>
-			</html>`),
-			want: []string{"a.php", "a.csv"},
+		"match": {
+			[]string{"http://localhost.com", "http://localhost.com/something"},
+			true,
+		},
+		"mismatch": {
+			[]string{"http://.com", "http://localhost.com/something"},
+			false,
 		},
 	}
 	for name := range cases {
 		tc := cases[name]
 		t.Run(name, func(t *testing.T) {
-			ts := setup(t, "csv", tc.php)
-			defer ts.Close()
-			client := New(ts.URL, -1)
-			ch := make(chan string)
-			go func() {
-				defer close(ch)
-				if err := client.FetchLink(ts.URL, ch); err != nil {
-					t.Fatal(err)
-				}
-			}()
-			compare(t, ts.URL, ch, tc.want)
+			got := IsSameDomain(tc.urls...)
+			if got != tc.want {
+				t.Fail()
+			}
 		})
 	}
 }
@@ -96,7 +90,7 @@ func TestUpdate(t *testing.T) {
 		<a href="c.csv">a</a>
 	</html>`)
 	ts := setup(t, "csv", php)
-	target := testutil.NewMockTarget(t, true, false)
+	target := testutil.NewMockTarget(t, false, false)
 	defer ts.Close()
 	client := New(ts.URL, -1)
 	ctx := context.Background()

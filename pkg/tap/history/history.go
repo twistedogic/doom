@@ -2,6 +2,7 @@ package history
 
 import (
 	"context"
+	"net/url"
 	"path"
 	"sync"
 
@@ -13,6 +14,24 @@ import (
 const (
 	Base = "https://www.football-data.co.uk/data.php"
 )
+
+func IsSameDomain(urls ...string) bool {
+	base, others := urls[0], urls[1:]
+	baseURL, err := url.Parse(base)
+	if err != nil {
+		return false
+	}
+	for _, u := range others {
+		parsedURL, err := url.Parse(u)
+		if err != nil {
+			return false
+		}
+		if baseURL.Hostname() != parsedURL.Hostname() {
+			return false
+		}
+	}
+	return true
+}
 
 type Client struct {
 	client.Client
@@ -38,31 +57,14 @@ func (c *Client) isVisited(u string) bool {
 	return loaded
 }
 
-func (c *Client) GetCSV(u string, target tap.Target) error {
-	if c.isVisited(u) {
+func (c *Client) ProcessLink(link string, target tap.Target, outCh chan string) error {
+	if c.isVisited(link) || !IsSameDomain(c.BaseURL, link) {
 		return nil
 	}
-	return c.WriteToTarget(u, target)
-}
-
-func (c *Client) FetchLink(link string, outCh chan string) error {
-	errCh := make(chan error)
-	linkCh := make(chan string)
-	go func() {
-		for l := range linkCh {
-			outCh <- l
-		}
-		errCh <- nil
-	}()
-	go func() {
-		defer close(linkCh)
-		if !c.isVisited(link) {
-			if err := crawl.CrawlHref(link, linkCh); err != nil {
-				errCh <- err
-			}
-		}
-	}()
-	return <-errCh
+	if path.Ext(link) == ".csv" {
+		return c.WriteToTarget(link, target)
+	}
+	return crawl.CrawlHref(link, outCh)
 }
 
 func (c *Client) Update(ctx context.Context, target tap.Target) error {
@@ -76,29 +78,28 @@ func (c *Client) Update(ctx context.Context, target tap.Target) error {
 		linkCh <- c.BaseURL
 	}()
 	go func() {
-		<-ctx.Done()
-		errCh <- ctx.Err()
+		for l := range linkCh {
+			wg.Add(1)
+			go func(link string) {
+				defer wg.Done()
+				if err := c.ProcessLink(link, target, linkCh); err != nil {
+					errCh <- err
+				}
+			}(l)
+		}
 	}()
 	go func() {
 		wg.Wait()
 		close(linkCh)
 		errCh <- nil
 	}()
-	for l := range linkCh {
-		wg.Add(1)
-		go func(link string) {
-			defer wg.Done()
-			switch path.Ext(link) {
-			case ".csv":
-				if err := c.GetCSV(link, target); err != nil {
-					errCh <- err
-				}
-			default:
-				if err := c.FetchLink(link, linkCh); err != nil {
-					errCh <- err
-				}
-			}
-		}(l)
+	for {
+		select {
+		case <-ctx.Done():
+			errCh <- ctx.Err()
+		case err := <-errCh:
+			return err
+		}
 	}
-	return <-errCh
+	return nil
 }
