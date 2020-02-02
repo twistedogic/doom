@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/PuerkitoBio/goquery v1.5.0
 	github.com/fatih/structs v1.1.0
+	github.com/google/go-cmp v0.3.0
 	github.com/json-iterator/go v1.1.9
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/spf13/afero v1.2.2

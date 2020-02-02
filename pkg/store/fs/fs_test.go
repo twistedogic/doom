@@ -1,4 +1,4 @@
-package store
+package fs
 
 import (
 	"fmt"
@@ -55,7 +55,7 @@ func TestFileStore(t *testing.T) {
 		tc := cases[name]
 		t.Run(name, func(t *testing.T) {
 			fs := &mockFs{t, make(map[string][]byte)}
-			store := NewFileStore(fs)
+			store := New(fs)
 			for k, b := range tc.input {
 				if err := store.Set(k, b); err != nil {
 					t.Fatal(err)

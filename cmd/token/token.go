@@ -1,7 +1,7 @@
 package token
 
 import (
-	"github.com/twistedogic/doom/pkg/store/drive"
+	"github.com/twistedogic/doom/pkg/store/fs/drive"
 	"github.com/urfave/cli"
 	"golang.org/x/net/context"
 	gdrive "google.golang.org/api/drive/v3"
