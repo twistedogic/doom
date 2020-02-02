@@ -1,128 +1,93 @@
 package radar
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
+	"bytes"
+	"context"
+	"os"
 	"path/filepath"
-	"strings"
+	"sort"
 	"testing"
 
-	"github.com/twistedogic/doom/pkg/config"
+	"github.com/google/go-cmp/cmp"
+	"github.com/twistedogic/doom/testutil"
 )
 
 const testdataPath = "../../../testdata"
 
-func Setup(t *testing.T, path string) *httptest.Server {
+func compare(t *testing.T, want []int, ch chan int) {
 	t.Helper()
-	files, err := ioutil.ReadDir(path)
+	got := []int{}
+	for i := range ch {
+		got = append(got, i)
+	}
+	sort.Ints(got)
+	sort.Ints(want)
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatal(diff)
+	}
+}
+
+func TestGetMatchID(t *testing.T) {
+	f, err := os.Open(filepath.Join(testdataPath, "fullfeed"))
+	outCh := make(chan int)
+	errCh := make(chan error)
+	want := []int{
+		14701401, 14701403, 14701405, 14701407, 14701409, 14701411, 14701413, 14701415,
+		14701417, 14701419, 15145935, 15145939, 15145945, 15150689, 15160367, 15160375,
+		16542357, 16542361, 16542365, 16542371, 16599583, 16682153, 16682155, 16682157,
+		16682159, 16682161, 16682163, 16682165, 16682167, 16682169, 16682171, 17129283,
+		17129285, 17129287, 17129295, 17215103, 17215105, 17215107, 17430413, 17430415,
+		17430417, 17430799, 17430801, 17430803, 17430805, 17430807, 17430809, 17466911,
+		17466913, 17466923, 17466925, 17466935, 17466937, 17466947, 17466949, 17527375,
+		17788896, 17788908, 17873198, 18013469, 18066039, 18220065, 18254981, 18277101,
+		18277121, 18284963, 18285207,
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
-	data := make(map[string][]byte)
-	for _, info := range files {
-		b, err := ioutil.ReadFile(filepath.Join(path, info.Name()))
-		if err != nil {
+	go func() {
+		defer close(outCh)
+		errCh <- getMatchID(f, outCh)
+	}()
+	go func() {
+		if err := <-errCh; err != nil {
 			t.Fatal(err)
 		}
-		data[info.Name()] = b
-	}
-	return httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		for k, b := range data {
-			lower := strings.ToLower(req.URL.Path)
-			if strings.Contains(lower, k) {
-				res.Write(b)
-				return
-			}
-		}
-		http.Error(res, req.URL.Path, 500)
-	}))
+	}()
+	compare(t, want, outCh)
 }
 
-func Write(t *testing.T, filePath string, value interface{}) {
-	t.Helper()
-	b, err := json.Marshal(value)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := ioutil.WriteFile(filePath, b, 0644); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestClient(t *testing.T) {
-	t.Skip()
-	client := New(RadarURL, -1)
-	var out interface{}
-	if err := client.GetMatchFullFeed(0, &out); err != nil {
-		t.Fatal(err)
-	} else {
-		Write(t, filepath.Join(testdataPath, "fullfeed"), out)
-	}
-	if err := client.GetMatchDetail(18088911, &out); err != nil {
-		t.Fatal(err)
-	} else {
-		Write(t, filepath.Join(testdataPath, "details"), out)
-	}
-	if err := client.GetBet(0, &out); err != nil {
-		t.Fatal(err)
-	} else {
-		Write(t, filepath.Join(testdataPath, "bet"), out)
-	}
-	if err := client.GetLastMatches(54785, &out); err != nil {
-		t.Fatal(err)
-	} else {
-		Write(t, filepath.Join(testdataPath, "team"), out)
-	}
-}
-
-func TestGetMatch(t *testing.T) {
-	ts := Setup(t, testdataPath)
+func TestGetFeed(t *testing.T) {
+	ts := testutil.Setup(t, testdataPath)
 	defer ts.Close()
 	f := New(ts.URL, -1)
-	results, err := f.GetMatch(0)
-	if err != nil {
+	target := testutil.NewMockTarget(t, false, false)
+	buf := new(bytes.Buffer)
+	if err := f.GetFeed(0, buf, target); err != nil {
 		t.Fatal(err)
 	}
-	if len(results) == 0 {
+	if len(buf.Bytes()) == 0 {
 		t.Fail()
 	}
 }
 
 func TestGetDetail(t *testing.T) {
-	ts := Setup(t, testdataPath)
+	ts := testutil.Setup(t, testdataPath)
 	defer ts.Close()
 	f := New(ts.URL, -1)
-	results, err := f.GetDetail(0)
-	if err != nil {
+	target := testutil.NewMockTarget(t, false, false)
+	if err := f.GetDetail(0, target); err != nil {
 		t.Fatal(err)
 	}
-	if len(results) == 0 {
-		t.Fail()
-	}
 }
-
-type mockTarget struct {
-	t *testing.T
-}
-
-func NewMockTarget(t *testing.T) mockTarget {
-	t.Helper()
-	return mockTarget{t}
-}
-
-func (m mockTarget) Load(config.Setting) error    { return nil }
-func (m mockTarget) UpsertItem(interface{}) error { return nil }
-func (m mockTarget) Close() error                 { return nil }
 
 func TestUpdate(t *testing.T) {
-	t.Skip()
-	ts := Setup(t, testdataPath)
+	ts := testutil.Setup(t, testdataPath)
 	defer ts.Close()
-	target := NewMockTarget(t)
+	ctx := context.Background()
+	target := testutil.NewMockTarget(t, false, false)
 	f := New(ts.URL, -1)
-	if err := f.Update(target); err != nil {
+	if err := f.Update(ctx, target); err != nil {
 		t.Fatal(err)
 	}
 }

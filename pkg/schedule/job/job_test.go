@@ -1,11 +1,11 @@
 package job
 
 import (
+	"context"
 	"testing"
 	"time"
 
-	"github.com/twistedogic/doom/pkg/config"
-	"github.com/twistedogic/doom/pkg/target"
+	"github.com/twistedogic/doom/pkg/tap"
 )
 
 type mockTarget struct {
@@ -17,9 +17,7 @@ func NewMockTarget(t *testing.T) mockTarget {
 	return mockTarget{t}
 }
 
-func (m mockTarget) Load(config.Setting) error    { return nil }
-func (m mockTarget) UpsertItem(interface{}) error { return nil }
-func (m mockTarget) Close() error                 { return nil }
+func (m mockTarget) Write([]byte) error { return nil }
 
 type mockTap struct {
 	t *testing.T
@@ -30,14 +28,24 @@ func NewMockTap(t *testing.T) mockTap {
 	return mockTap{t}
 }
 
-func (m mockTap) Load(config.Setting) error  { return nil }
-func (m mockTap) Update(target.Target) error { return nil }
+func (m mockTap) Update(context.Context, tap.Target) error { return nil }
 
-func TestJob(t *testing.T) {
+func TestJob_Execute(t *testing.T) {
 	src := NewMockTap(t)
 	dst := NewMockTarget(t)
-	job := New("test", src, dst, time.Hour)
-	if err := job.Execute(); err != nil {
+	job := New("test", src, dst, time.Millisecond)
+	if err := job.Execute(context.TODO()); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestJob_Run(t *testing.T) {
+	src := NewMockTap(t)
+	dst := NewMockTarget(t)
+	job := New("test", src, dst, time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	defer cancel()
+	if err := job.Run(ctx); err != nil {
 		t.Fatal(err)
 	}
 }

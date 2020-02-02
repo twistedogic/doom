@@ -1,55 +1,53 @@
 package start
 
 import (
-	"fmt"
-	"log"
-	"net/http"
-
-	"github.com/twistedogic/doom/pkg/function"
+	"github.com/spf13/afero"
+	"github.com/twistedogic/doom/pkg/model"
+	"github.com/twistedogic/doom/pkg/model/detail"
+	"github.com/twistedogic/doom/pkg/model/history"
+	"github.com/twistedogic/doom/pkg/model/match"
+	"github.com/twistedogic/doom/pkg/model/odd"
+	"github.com/twistedogic/doom/pkg/schedule"
+	"github.com/twistedogic/doom/pkg/schedule/job"
+	"github.com/twistedogic/doom/pkg/store"
+	filestore "github.com/twistedogic/doom/pkg/store/fs"
 	"github.com/urfave/cli"
 )
 
-const (
-	dateNameFormat = "20060102"
-)
-
 var (
-	portFlag int
-	rateFlag int
+	pathFlag string
 
 	flags = []cli.Flag{
-		cli.IntFlag{
-			Name:        "port, p",
-			Value:       3000,
-			Usage:       "port for server",
-			Destination: &portFlag,
-		},
-		cli.IntFlag{
-			Name:        "rate, r",
-			Value:       -1,
-			Usage:       "data ingestion rate (entry per second)",
-			Destination: &rateFlag,
+		cli.StringFlag{
+			Name:        "path, p",
+			Value:       ".",
+			Usage:       "path for data store",
+			Destination: &pathFlag,
 		},
 	}
 )
 
 func New() cli.Command {
+	fs := afero.NewBasePathFs(afero.NewOsFs(), pathFlag)
+	s := store.NewFileStore(filestore.New(fs))
+	transformers := []model.TransformFunc{
+		odd.Transform,
+		history.Transform,
+		detail.Transform,
+		match.Transform,
+	}
+	dst := model.New(s, transformers...)
+	jobs := make([]schedule.Job, 0, len(configs))
+	for _, cfg := range configs {
+		jobs = append(jobs, job.New(cfg.Name, cfg.Tap, dst, cfg.Period))
+	}
 	run := func(c *cli.Context) error {
-		handler, err := function.New()
-		if err != nil {
-			return err
-		}
-		function.DefaultRate = rateFlag
-		server := &http.Server{
-			Addr:    fmt.Sprintf(":%d", portFlag),
-			Handler: handler,
-		}
-		log.Printf("Server Running at %d", portFlag)
-		return server.ListenAndServe()
+		scheduler := schedule.New(jobs...)
+		return scheduler.Start(ContextWithInterrupt())
 	}
 	return cli.Command{
 		Name:   "start",
-		Usage:  "start metric server",
+		Usage:  "start scraping",
 		Flags:  flags,
 		Action: run,
 	}
