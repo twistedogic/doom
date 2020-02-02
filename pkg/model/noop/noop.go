@@ -1,7 +1,7 @@
 package noop
 
 import (
-	"crypto/sha1"
+	hash "crypto/sha1"
 	"encoding/base64"
 
 	"github.com/twistedogic/doom/pkg/model"
@@ -20,9 +20,9 @@ func (r Raw) Item(i *model.Item) error {
 }
 
 func Transform(b []byte, encoder model.Encoder) error {
-	hash := sha1.New()
-	hash.Reset()
-	sum := hash.Sum(b)
-	key := base64.URLEncoding.EncodeToString(sum)
+	h := hash.New()
+	h.Reset()
+	sum := h.Sum(b)
+	key := base64.URLEncoding.EncodeToString(sum[:10])
 	return encoder.Encode(Raw{Key: key, Data: b})
 }
