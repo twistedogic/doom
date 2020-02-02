@@ -81,7 +81,13 @@ func NewMockTarget(t *testing.T, showLog, hasError bool) MockTarget {
 	return MockTarget{t, showLog, hasError}
 }
 
-func (m MockTarget) Write([]byte) error {
+func (m MockTarget) Write(b []byte) error {
+	if m.showLog {
+		m.t.Log(string(b))
+	}
+	if m.hasError {
+		return TestError
+	}
 	return nil
 }
 
