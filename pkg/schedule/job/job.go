@@ -37,15 +37,19 @@ func (j Job) Execute(ctx context.Context) error {
 
 func (j Job) Run(ctx context.Context) error {
 	ticker := time.NewTicker(j.Interval)
+	run := func(c context.Context) {
+		runCtx, _ := context.WithTimeout(c, j.Interval)
+		if err := j.Execute(runCtx); err != nil {
+			log.Printf("%s %s %v", ERROR, j.Name, err)
+		} else {
+			log.Printf("%s %s", DONE, j.Name)
+		}
+	}
+	go run(ctx)
 	for {
 		select {
 		case <-ticker.C:
-			runCtx, _ := context.WithTimeout(ctx, j.Interval)
-			if err := j.Execute(runCtx); err != nil {
-				log.Printf("%s %s %v", ERROR, j.Name, err)
-			} else {
-				log.Printf("%s %s", DONE, j.Name)
-			}
+			go run(ctx)
 		case <-ctx.Done():
 			return nil
 		}
