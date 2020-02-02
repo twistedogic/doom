@@ -9,10 +9,21 @@ import (
 	"github.com/spf13/afero"
 )
 
+func setupTempFolder(t *testing.T) string {
+	t.Helper()
+	dir, err := ioutil.TempDir("", "testfs")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return dir
+}
+
 func TestWriteFile(t *testing.T) {
 	content := "test"
 	name := "newdir/doc"
-	fs := afero.NewMemMapFs()
+	dir := setupTempFolder(t)
+	defer os.RemoveAll(dir)
+	fs := afero.NewBasePathFs(afero.NewOsFs(), dir)
 	writer := &Target{fs}
 	buf := bytes.NewBufferString(content)
 	if _, err := fs.Open(name); os.IsExist(err) {
