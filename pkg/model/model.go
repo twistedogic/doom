@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/twistedogic/doom/pkg/store"
 )
@@ -44,14 +45,19 @@ func (m Modeler) Encode(i Model) error {
 
 func (m Modeler) Write(b []byte) error {
 	tranformed := false
+	errs := make([]error, 0, len(m.transformers))
 	for _, fn := range m.transformers {
 		err := fn(b, m)
 		if err == nil {
 			tranformed = true
 			continue
 		}
+		errs = append(errs, err)
 	}
 	if !tranformed {
+		for _, err := range errs {
+			log.Print(err)
+		}
 		return fmt.Errorf("no transform done")
 	}
 	return nil
