@@ -2,6 +2,7 @@ package crawl
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 
@@ -13,6 +14,7 @@ func CrawlHref(u string, ch chan string) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("crawling %s", u)
 	doc, err := goquery.NewDocument(u)
 	if err != nil {
 		return err
