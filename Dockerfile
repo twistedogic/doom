@@ -6,7 +6,8 @@ RUN go build -o goapp doom.go
 
 # final stage
 FROM alpine
+RUN mkdir -p /data
 WORKDIR /app
 RUN apk add --no-cache curl
 COPY --from=build-env /workspace/goapp /app/
-ENTRYPOINT ./goapp
+CMD ["/app/goapp", "start", "-p", "/data/data.db"]
