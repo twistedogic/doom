@@ -9,7 +9,6 @@ import (
 	"github.com/twistedogic/doom/pkg/model/odd"
 	"github.com/twistedogic/doom/pkg/schedule"
 	"github.com/twistedogic/doom/pkg/schedule/job"
-	"github.com/twistedogic/doom/pkg/store"
 	"github.com/twistedogic/doom/pkg/store/bolt"
 	"github.com/urfave/cli"
 )
@@ -27,15 +26,12 @@ var (
 	}
 )
 
-func SetupStore(path string) (store.Store, error) {
-	return bolt.New(path)
-}
-
 func Run(c *cli.Context) error {
-	s, err := SetupStore(pathFlag)
+	s, err := bolt.New(pathFlag)
 	if err != nil {
 		return err
 	}
+	defer s.Close()
 	transformers := []model.TransformFunc{
 		odd.Transform,
 		history.Transform,
