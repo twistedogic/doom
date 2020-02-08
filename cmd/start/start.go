@@ -1,7 +1,6 @@
 package start
 
 import (
-	"github.com/spf13/afero"
 	"github.com/twistedogic/doom/pkg/model"
 	"github.com/twistedogic/doom/pkg/model/detail"
 	"github.com/twistedogic/doom/pkg/model/history"
@@ -11,8 +10,7 @@ import (
 	"github.com/twistedogic/doom/pkg/schedule"
 	"github.com/twistedogic/doom/pkg/schedule/job"
 	"github.com/twistedogic/doom/pkg/store"
-	"github.com/twistedogic/doom/pkg/store/fs"
-	"github.com/twistedogic/doom/pkg/store/fs/file"
+	"github.com/twistedogic/doom/pkg/store/bolt"
 	"github.com/urfave/cli"
 )
 
@@ -29,13 +27,15 @@ var (
 	}
 )
 
-func SetupStore(path string) store.Store {
-	fileFs := afero.NewBasePathFs(afero.NewOsFs(), path)
-	return fs.New(file.New(fileFs))
+func SetupStore(path string) (store.Store, error) {
+	return bolt.New(path)
 }
 
 func Run(c *cli.Context) error {
-	s := SetupStore(pathFlag)
+	s, err := SetupStore(pathFlag)
+	if err != nil {
+		return err
+	}
 	transformers := []model.TransformFunc{
 		odd.Transform,
 		history.Transform,
