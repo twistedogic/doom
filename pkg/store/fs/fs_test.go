@@ -6,7 +6,8 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
+	"github.com/twistedogic/doom/pkg/store"
+	"github.com/twistedogic/doom/testutil"
 )
 
 type mockFs struct {
@@ -40,30 +41,18 @@ func (m *mockFs) List() ([]string, error) {
 	return keys, nil
 }
 
+type TestWrapper struct {
+	t *testing.T
+}
+
+func (t TestWrapper) Setup() store.Store {
+	t.t.Helper()
+	fs := &mockFs{t.t, make(map[string][]byte)}
+	return New(fs)
+}
+
+func (t TestWrapper) Cleanup() {}
+
 func TestFileStore(t *testing.T) {
-	cases := map[string]struct {
-		input map[string][]byte
-	}{
-		"base": {
-			input: map[string][]byte{
-				"id1": []byte(`ok`),
-				"id2": []byte(`ok`),
-			},
-		},
-	}
-	for name := range cases {
-		tc := cases[name]
-		t.Run(name, func(t *testing.T) {
-			fs := &mockFs{t, make(map[string][]byte)}
-			store := New(fs)
-			for k, b := range tc.input {
-				if err := store.Set(k, b); err != nil {
-					t.Fatal(err)
-				}
-			}
-			if diff := cmp.Diff(tc.input, fs.content); diff != "" {
-				t.Fatal(diff)
-			}
-		})
-	}
+	testutil.StoreTest(t, TestWrapper{t})
 }

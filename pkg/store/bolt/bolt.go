@@ -20,7 +20,7 @@ func New(path string) (Store, error) {
 
 func (s Store) Get(key string) ([]byte, error) {
 	value := make([]byte, 0)
-	err := db.View(func(tx *bolt.Tx) error {
+	err := s.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(BucketName))
 		if b == nil {
 			return fmt.Errorf("bucket %s missing", BucketName)
@@ -36,7 +36,7 @@ func (s Store) Get(key string) ([]byte, error) {
 }
 
 func (s Store) Set(key string, b []byte) error {
-	return db.Batch(func(tx *bolt.Tx) error {
+	return s.Batch(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(BucketName))
 		if err != nil {
 			return err
@@ -47,7 +47,7 @@ func (s Store) Set(key string, b []byte) error {
 
 func (s Store) Scan(patterns ...string) ([]string, error) {
 	keys := make([]string, 0)
-	err := db.View(func(tx *bolt.Tx) error {
+	err := s.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(BucketName))
 		if b == nil {
 			return fmt.Errorf("bucket %s missing", BucketName)
@@ -59,7 +59,7 @@ func (s Store) Scan(patterns ...string) ([]string, error) {
 				return nil
 			}
 			for _, pattern := range patterns {
-				if !strings.Contains(key, patterns) {
+				if !strings.Contains(key, pattern) {
 					return nil
 				}
 			}
