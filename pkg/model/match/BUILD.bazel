@@ -1,0 +1,26 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "match.go",
+        "match_json.go",
+    ],
+    importpath = "github.com/twistedogic/doom/pkg/model/match",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/model:go_default_library",
+        "@com_github_json_iterator_go//:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["match_test.go"],
+    data = ["//:testdata"],
+    embed = [":go_default_library"],
+    deps = [
+        "//pkg/model:go_default_library",
+        "//testutil:go_default_library",
+    ],
+)

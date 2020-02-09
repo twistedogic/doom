@@ -14,12 +14,16 @@ import (
 	"github.com/twistedogic/doom/testutil"
 )
 
+const testdataPath = "../../../testdata"
+
 func TestPipe(t *testing.T) {
+	ts := testutil.Setup(t, testdataPath)
+	defer ts.Close()
 	transformers := []model.TransformFunc{
 		odd.Transform,
 	}
 	taps := []tap.Tap{
-		jockey.New(jockey.Base, "had", 5),
+		jockey.New(ts.URL, "had", 5),
 	}
 	s := testutil.NewMockStore(t, make(map[string][]byte), false)
 	dst := model.New(s, transformers...)
@@ -30,7 +34,7 @@ func TestPipe(t *testing.T) {
 			defer wg.Done()
 			ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
 			defer cancel()
-			j := job.New("test", src, dst, time.Millisecond)
+			j := job.New("test", src, dst, time.Second)
 			if err := j.Execute(ctx); err != nil {
 				t.Fatal(err)
 			}
@@ -39,8 +43,5 @@ func TestPipe(t *testing.T) {
 	wg.Wait()
 	if len(s.Content()) == 0 {
 		t.Fatal("no data")
-	}
-	for k, v := range s.Content() {
-		t.Logf("%s: %s\n", k, v)
 	}
 }

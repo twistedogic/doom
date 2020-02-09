@@ -3,3 +3,5 @@
 *.ndjson
 *.json
 .DS_Store
+*.db
+bazel-*

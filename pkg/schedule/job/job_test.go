@@ -2,6 +2,9 @@ package job
 
 import (
 	"context"
+	"io/ioutil"
+	"log"
+	"os"
 	"testing"
 	"time"
 
@@ -31,6 +34,8 @@ func NewMockTap(t *testing.T) mockTap {
 func (m mockTap) Update(context.Context, tap.Target) error { return nil }
 
 func TestJob_Execute(t *testing.T) {
+	log.SetOutput(ioutil.Discard)
+	defer log.SetOutput(os.Stdout)
 	src := NewMockTap(t)
 	dst := NewMockTarget(t)
 	job := New("test", src, dst, time.Millisecond)
@@ -40,6 +45,8 @@ func TestJob_Execute(t *testing.T) {
 }
 
 func TestJob_Run(t *testing.T) {
+	log.SetOutput(ioutil.Discard)
+	defer log.SetOutput(os.Stdout)
 	src := NewMockTap(t)
 	dst := NewMockTarget(t)
 	job := New("test", src, dst, time.Millisecond)

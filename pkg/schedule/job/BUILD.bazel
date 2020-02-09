@@ -1,0 +1,26 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["job.go"],
+    importpath = "github.com/twistedogic/doom/pkg/schedule/job",
+    visibility = ["//visibility:public"],
+    deps = ["//pkg/tap:go_default_library"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "job_test.go",
+        "pipe_test.go",
+    ],
+    data = ["//:testdata"],
+    embed = [":go_default_library"],
+    deps = [
+        "//pkg/model:go_default_library",
+        "//pkg/model/odd:go_default_library",
+        "//pkg/tap:go_default_library",
+        "//pkg/tap/jockey:go_default_library",
+        "//testutil:go_default_library",
+    ],
+)

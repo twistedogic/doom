@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["file.go"],
+    importpath = "github.com/twistedogic/doom/pkg/store/fs/file",
+    visibility = ["//visibility:public"],
+    deps = ["@com_github_spf13_afero//:go_default_library"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["file_test.go"],
+    embed = [":go_default_library"],
+    deps = ["@com_github_spf13_afero//:go_default_library"],
+)

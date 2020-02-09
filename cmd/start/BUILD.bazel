@@ -1,0 +1,28 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "config.go",
+        "start.go",
+        "stop.go",
+    ],
+    importpath = "github.com/twistedogic/doom/cmd/start",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/model:go_default_library",
+        "//pkg/model/detail:go_default_library",
+        "//pkg/model/history:go_default_library",
+        "//pkg/model/match:go_default_library",
+        "//pkg/model/noop:go_default_library",
+        "//pkg/model/odd:go_default_library",
+        "//pkg/schedule:go_default_library",
+        "//pkg/schedule/job:go_default_library",
+        "//pkg/store/bolt:go_default_library",
+        "//pkg/tap:go_default_library",
+        "//pkg/tap/history:go_default_library",
+        "//pkg/tap/jockey:go_default_library",
+        "//pkg/tap/radar:go_default_library",
+        "@com_github_urfave_cli//:go_default_library",
+    ],
+)
