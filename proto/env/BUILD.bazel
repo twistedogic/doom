@@ -1,0 +1,18 @@
+# gazelle:ignore
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
+go_proto_library(
+    name = "env_go_proto",
+    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
+    importpath = "github.com/twistedogic/doom/proto/env",
+    proto = "@com_github_applieddeeplearning_gymx//:env_proto",
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "go_default_library",
+    embed = [":env_go_proto"],
+    importpath = "github.com/twistedogic/doom/proto/env",
+    visibility = ["//visibility:public"],
+)

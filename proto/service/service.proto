@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+service Lookup {
+  rpc Search (SearchRequest) returns (SearchResponse) {};
+}
+
+message SearchRequest {
+  map<string, string> fields = 1;
+}
+
+message SearchResponse {
+  repeated bytes result = 1;
+}

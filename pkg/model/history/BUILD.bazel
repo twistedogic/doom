@@ -1,0 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["history.go"],
+    importpath = "github.com/twistedogic/doom/pkg/model/history",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/model:go_default_library",
+        "@com_github_fatih_structs//:go_default_library",
+        "@com_github_json_iterator_go//:go_default_library",
+        "@com_github_mitchellh_mapstructure//:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["history_test.go"],
+    data = ["//:testdata"],
+    embed = [":go_default_library"],
+    deps = [
+        "//pkg/model:go_default_library",
+        "//testutil:go_default_library",
+    ],
+)

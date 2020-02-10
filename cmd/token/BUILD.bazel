@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["token.go"],
+    importpath = "github.com/twistedogic/doom/cmd/token",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/store/fs/drive:go_default_library",
+        "@com_github_urfave_cli//:go_default_library",
+        "@org_golang_google_api//drive/v3:go_default_library",
+        "@org_golang_x_net//context:go_default_library",
+    ],
+)

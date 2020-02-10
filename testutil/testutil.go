@@ -34,8 +34,9 @@ func Setup(t *testing.T, path string) *httptest.Server {
 	}
 	return httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		for k, b := range data {
-			lower := strings.ToLower(req.URL.Path)
-			if strings.Contains(lower, k) {
+			lowerPath := strings.ToLower(req.URL.Path)
+			lowerQuery := strings.ToLower(req.URL.RawQuery)
+			if strings.Contains(lowerPath, k) || strings.Contains(lowerQuery, k) {
 				res.Write(b)
 				return
 			}
