@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package model;
+
+import "google/protobuf/timestamp.proto";
+
+message Team {
+  string id = 1;
+  string name = 3;
+}
+
+message Score {
+  int64 home = 1;
+  int64 away = 2;
+}
+
+message Match {
+  string id = 1;
+  google.protobuf.Timestamp match_date = 2;
+  Team home = 3;
+  Team away = 4;
+  enum Result {
+    HOME = 0;
+    AWAY = 1;
+    DRAW = 2;
+    IN_PROGRESS = 3;
+    CANCELLED = 4;
+  }
+  Result result = 5;
+  Score first_half = 6;
+  Score second_half = 7;
+  Score extra_time = 8;
+}

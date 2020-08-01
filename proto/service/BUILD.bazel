@@ -10,7 +10,7 @@ proto_library(
 
 go_proto_library(
     name = "service_go_proto",
-    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
+    compilers = ["@io_bazel_rules_go//proto:gogofaster_grpc"],
     importpath = "github.com/twistedogic/doom/proto/service",
     proto = ":service_proto",
     visibility = ["//visibility:public"],

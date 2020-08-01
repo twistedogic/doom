@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package jockey;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+message Data {
+  repeated Match matches = 1;
+}
+
+message Odd {
+  string id = 1 [(gogoproto.jsontag) = "ID"];
+  string away = 2 [(gogoproto.jsontag) = "A"];
+  string home  = 3 [(gogoproto.jsontag) = "H"];
+  string draw = 4 [(gogoproto.jsontag) = "D"];
+  string status = 5 [(gogoproto.jsontag) = "POOLSTATUS"];
+}
+
+message League {
+  string id = 1 [(gogoproto.jsontag) = "leagueID"];
+  string name = 2 [(gogoproto.jsontag) = "leagueNameEN"];
+}
+
+message Team {
+  string id = 1 [(gogoproto.jsontag) = "teamID"];
+  string name = 2 [(gogoproto.jsontag) = "teamNameEN"];
+}
+
+message Event {
+  int64 radar_id = 1 [(gogoproto.jsontag) = "matchIDbetradar,string"];
+}
+
+message Score {
+  string period = 1 [(gogoproto.jsontag) = "periodvalue"];
+  int64 home = 2 [(gogoproto.jsontag) = "home,string"];
+  int64 away = 3 [(gogoproto.jsontag) = "away,string"];
+}
+
+message Match {
+  string match_id = 1 [(gogoproto.jsontag) = "matchID"];
+  string match_time = 2;
+  string home_team = 3 [(gogoproto.jsontag) = "homeTeam"];
+  string away_team = 4 [(gogoproto.jsontag) = "awayTeam"];
+  Odd fhaodds = 5;
+  Odd hadodds = 6;
+  Event live_event = 7;
+  string last_update = 8 [(gogoproto.jsontag) = "statuslastupdated"];
+  repeated Score score = 9 [(gogoproto.jsontag) = "accumulatedscore"];
+}

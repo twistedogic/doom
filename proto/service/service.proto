@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package service;
+
 service Lookup {
   rpc Search (SearchRequest) returns (SearchResponse) {};
 }
