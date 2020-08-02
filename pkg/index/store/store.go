@@ -78,8 +78,8 @@ func (i Index) Update(key string, b []byte) error {
 	return nil
 }
 
-func (i Index) Reindex(s store.Store) error {
-	keys, err := s.Scan()
+func (i Index) Reindex(prefix string, s store.Store) error {
+	keys, err := s.Scan(prefix)
 	if err != nil {
 		return err
 	}

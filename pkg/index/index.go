@@ -9,7 +9,7 @@ const (
 )
 
 type Index interface {
-	Reindex(store.Store) error
+	Reindex(string, store.Store) error
 	Search(string, string) ([]string, error)
 	Update([]byte) error
 }
