@@ -1,12 +1,11 @@
 package client
 
 import (
+	"context"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 
-	"github.com/twistedogic/doom/pkg/tap"
 	"go.uber.org/ratelimit"
 )
 
@@ -29,9 +28,13 @@ func New(rate int) Client {
 	}
 }
 
-func (c Client) Request(req *http.Request, w io.Writer) error {
+func (c Client) request(ctx context.Context, method, url string, body io.Reader, w io.Writer) error {
 	c.Take()
-	log.Printf("%s %s", req.Method, req.URL)
+	log.Printf("%s %s", method, url)
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return err
+	}
 	res, err := c.Do(req)
 	if err != nil {
 		return err
@@ -43,25 +46,6 @@ func (c Client) Request(req *http.Request, w io.Writer) error {
 	return nil
 }
 
-func (c Client) GetResponse(u string, w io.Writer) error {
-	req, err := http.NewRequest("GET", u, nil)
-	if err != nil {
-		return err
-	}
-	return c.Request(req, w)
-}
-
-func (c Client) WriteToTarget(u string, target tap.Target) error {
-	c.Take()
-	log.Printf("GET %s", u)
-	res, err := c.Get(u)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	b, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
-	return target.Write(b)
+func (c Client) Get(ctx context.Context, url string, w io.Writer) error {
+	return c.request(ctx, "GET", url, nil, w)
 }

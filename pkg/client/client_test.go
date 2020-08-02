@@ -2,59 +2,58 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/twistedogic/doom/testutil"
 )
 
-func Setup(t *testing.T, body []byte) *httptest.Server {
+func setup(t *testing.T, body []byte) *httptest.Server {
 	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.Write(body)
 	}))
 }
 
-func TestRequest(t *testing.T) {
-	payload := []byte(`something`)
-	ts := Setup(t, payload)
-	defer ts.Close()
-	buf := &bytes.Buffer{}
-	client := New(0)
-	req, err := http.NewRequest("GET", ts.URL, nil)
-	if err != nil {
-		t.Fatal(err)
+func Test_request(t *testing.T) {
+	cases := map[string]struct {
+		body               []byte
+		method             string
+		isCancel, hasError bool
+	}{
+		"base": {
+			body:     []byte(`something`),
+			method:   "GET",
+			isCancel: false,
+			hasError: false,
+		},
+		"cancel": {
+			body:     []byte(`something`),
+			method:   "GET",
+			isCancel: true,
+			hasError: true,
+		},
 	}
-	if err := client.Request(req, buf); err != nil {
-		t.Fatal(err)
-	}
-	if string(payload) != string(buf.Bytes()) {
-		t.Fail()
-	}
-}
-
-func TestGetResponse(t *testing.T) {
-	payload := []byte(`something`)
-	ts := Setup(t, payload)
-	defer ts.Close()
-	buf := &bytes.Buffer{}
-	client := New(0)
-	if err := client.GetResponse(ts.URL, buf); err != nil {
-		t.Fatal(err)
-	}
-	if string(payload) != string(buf.Bytes()) {
-		t.Fail()
-	}
-}
-
-func TestWriteToTarget(t *testing.T) {
-	payload := []byte(`something`)
-	ts := Setup(t, payload)
-	defer ts.Close()
-	target := testutil.NewMockTarget(t, false, false)
-	client := New(0)
-	if err := client.WriteToTarget(ts.URL, target); err != nil {
-		t.Fatal(err)
+	for name := range cases {
+		tc := cases[name]
+		t.Run(name, func(t *testing.T) {
+			ts := setup(t, tc.body)
+			defer ts.Close()
+			buf := new(bytes.Buffer)
+			client := New(0)
+			ctx, cancel := context.WithCancel(context.TODO())
+			if tc.isCancel {
+				cancel()
+			}
+			if err := client.request(ctx, tc.method, ts.URL, nil, buf); (err != nil) != tc.hasError {
+				t.Fatal(err)
+			}
+			got := buf.Bytes()
+			if !tc.hasError {
+				if !bytes.Equal(tc.body, got) {
+					t.Fatalf("want: %s, got: %s", string(tc.body), string(got))
+				}
+			}
+		})
 	}
 }
