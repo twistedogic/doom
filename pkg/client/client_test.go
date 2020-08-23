@@ -45,7 +45,7 @@ func Test_request(t *testing.T) {
 			if tc.isCancel {
 				cancel()
 			}
-			if err := client.request(ctx, tc.method, ts.URL, nil, buf); (err != nil) != tc.hasError {
+			if err := client.Request(ctx, tc.method, ts.URL, nil, buf); (err != nil) != tc.hasError {
 				t.Fatal(err)
 			}
 			got := buf.Bytes()
