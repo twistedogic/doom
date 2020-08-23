@@ -5,4 +5,5 @@ go_library(
     srcs = ["tap.go"],
     importpath = "github.com/twistedogic/doom/pkg/tap",
     visibility = ["//visibility:public"],
+    deps = ["//pkg/store:go_default_library"],
 )

@@ -8,12 +8,25 @@ message Data {
   repeated Match matches = 1;
 }
 
-message Odd {
+message HadOdd {
   string id = 1 [(gogoproto.jsontag) = "ID"];
-  string away = 2 [(gogoproto.jsontag) = "A"];
-  string home  = 3 [(gogoproto.jsontag) = "H"];
-  string draw = 4 [(gogoproto.jsontag) = "D"];
-  string status = 5 [(gogoproto.jsontag) = "POOLSTATUS"];
+  string status = 2 [(gogoproto.jsontag) = "POOLSTATUS"];
+  string away = 3 [(gogoproto.jsontag) = "A"];
+  string home  = 4 [(gogoproto.jsontag) = "H"];
+  string draw = 5 [(gogoproto.jsontag) = "D"];
+}
+
+message TotalOdd {
+  string id = 1 [(gogoproto.jsontag) = "ID"];
+  string status = 2 [(gogoproto.jsontag) = "POOLSTATUS"];
+  string p0 = 3 [(gogoproto.jsontag) = "P0"];
+  string p1 = 4 [(gogoproto.jsontag) = "P1"];
+  string p2 = 5 [(gogoproto.jsontag) = "P2"];
+  string p3 = 6 [(gogoproto.jsontag) = "P3"];
+  string p4 = 7 [(gogoproto.jsontag) = "P4"];
+  string p5 = 8 [(gogoproto.jsontag) = "P5"];
+  string p6 = 9 [(gogoproto.jsontag) = "P6"];
+  string p7 = 10 [(gogoproto.jsontag) = "M7"];
 }
 
 message League {
@@ -26,24 +39,32 @@ message Team {
   string name = 2 [(gogoproto.jsontag) = "teamNameEN"];
 }
 
+message LiveEvent {
+  int64 minutes = 1 [(gogoproto.jsontag) = "minutesElasped,string"];
+  string action_type = 2;
+  string homeaway = 3;
+}
+
 message Event {
-  int64 radar_id = 1 [(gogoproto.jsontag) = "matchIDbetradar,string"];
+  string radar_id = 1 [(gogoproto.jsontag) = "matchIDbetradar,string"];
+  repeated LiveEvent events = 2 [(gogoproto.jsontag) = "liveevent"];
 }
 
 message Score {
   string period = 1 [(gogoproto.jsontag) = "periodvalue"];
-  int64 home = 2 [(gogoproto.jsontag) = "home,string"];
-  int64 away = 3 [(gogoproto.jsontag) = "away,string"];
+  string home = 2 [(gogoproto.jsontag) = "home"];
+  string away = 3 [(gogoproto.jsontag) = "away"];
 }
 
 message Match {
-  string match_id = 1 [(gogoproto.jsontag) = "matchID"];
+  string id = 1 [(gogoproto.jsontag) = "matchID"];
   string match_time = 2;
-  string home_team = 3 [(gogoproto.jsontag) = "homeTeam"];
-  string away_team = 4 [(gogoproto.jsontag) = "awayTeam"];
-  Odd fhaodds = 5;
-  Odd hadodds = 6;
-  Event live_event = 7;
-  string last_update = 8 [(gogoproto.jsontag) = "statuslastupdated"];
-  repeated Score score = 9 [(gogoproto.jsontag) = "accumulatedscore"];
+  Team home_team = 3 [(gogoproto.jsontag) = "homeTeam"];
+  Team away_team = 4 [(gogoproto.jsontag) = "awayTeam"];
+  HadOdd fhaodds = 5;
+  HadOdd hadodds = 6;
+  TotalOdd ttgodds = 7;
+  Event live_event = 8;
+  string last_update = 9 [(gogoproto.jsontag) = "statuslastupdated"];
+  repeated Score score = 10 [(gogoproto.jsontag) = "accumulatedscore"];
 }
