@@ -1,0 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["jockey.go"],
+    importpath = "github.com/twistedogic/doom/pkg/transform/jockey",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//proto/model:go_default_library",
+        "//proto/source/jockey:go_default_library",
+        "@com_github_gogo_protobuf//types:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["jockey_test.go"],
+    data = ["//:testdata"],
+    embed = [":go_default_library"],
+    deps = [
+        "//pkg/tap/jockey:go_default_library",
+        "//pkg/transform:go_default_library",
+        "//testutil:go_default_library",
+    ],
+)

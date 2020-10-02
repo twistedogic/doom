@@ -1,0 +1,12 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["transform.go"],
+    importpath = "github.com/twistedogic/doom/pkg/transform",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/store:go_default_library",
+        "//proto/model:go_default_library",
+    ],
+)
