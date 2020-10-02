@@ -5,10 +5,12 @@ go_library(
     srcs = ["schedule.go"],
     importpath = "github.com/twistedogic/doom/pkg/schedule",
     visibility = ["//visibility:public"],
+    deps = ["@com_github_benbjohnson_clock//:go_default_library"],
 )
 
 go_test(
     name = "go_default_test",
     srcs = ["schedule_test.go"],
     embed = [":go_default_library"],
+    deps = ["@com_github_benbjohnson_clock//:go_default_library"],
 )

@@ -2,31 +2,60 @@ package schedule
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
+
+	"github.com/benbjohnson/clock"
 )
 
-type mockJob struct{}
+type mockOperation struct {
+	hasError bool
+	called   int
+}
 
-func (m mockJob) Run(ctx context.Context) error {
-	<-ctx.Done()
+func (m *mockOperation) Run(ctx context.Context) error {
+	m.called += 1
+	if m.hasError {
+		return fmt.Errorf("test error")
+	}
 	return nil
 }
 
-func setupJobs(n int) []Job {
-	jobs := make([]Job, n)
-	for i := range jobs {
-		jobs[i] = mockJob{}
+func (m *mockOperation) Check(t *testing.T, want int) {
+	if m.called != want {
+		t.Fatalf("want: %d, got: %d", want, m.called)
 	}
-	return jobs
 }
 
 func TestScheduler(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.TODO(), 1*time.Second)
-	defer cancel()
-	jobs := setupJobs(5)
-	s := New(jobs...)
-	if err := s.Start(ctx); err != nil {
-		t.Fatal(err)
+	cases := map[string]struct {
+		interval, timeout time.Duration
+		want              int
+		hasError          bool
+	}{
+		"base": {
+			interval: time.Second,
+			timeout:  time.Second,
+			want:     5,
+			hasError: false,
+		},
+	}
+	for name := range cases {
+		tc := cases[name]
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.TODO())
+			mockClock := clock.NewMock()
+			m := &mockOperation{tc.hasError, 0}
+			s := Scheduler{mockClock, tc.interval, tc.timeout}
+			go func() {
+				s.Start(ctx, m.Run)
+			}()
+			for i := 0; i < tc.want; i++ {
+				mockClock.Add(tc.interval)
+			}
+			cancel()
+			m.Check(t, tc.want)
+		})
 	}
 }
