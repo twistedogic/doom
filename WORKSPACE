@@ -9,7 +9,7 @@ http_archive(
     ],
 )
 
-load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_toolchains")
+load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
 
 go_rules_dependencies()
 
@@ -26,6 +26,13 @@ http_archive(
 
 load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
 
+go_repository(
+    name = "com_github_urfave_cli_v2",
+    importpath = "github.com/urfave/cli/v2",
+    sum = "h1:JTTnM6wKzdA0Jqodd966MVj4vWbbquZykeX1sKbe2C4=",
+    version = "v2.2.0",
+)
+
 gazelle_dependencies()
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
@@ -39,8 +46,6 @@ git_repository(
 
 new_git_repository(
     name = "com_github_applieddeeplearning_gymx",
-    commit = "a2e4deb5de9b54485002bb584fd1575cff290428",
-    remote = "https://github.com/AppliedDeepLearning/gymx",
     build_file_content = """
 load("@rules_proto//proto:defs.bzl", "proto_library")
 proto_library(
@@ -50,6 +55,8 @@ proto_library(
     visibility = ["//visibility:public"],
 )
     """,
+    commit = "a2e4deb5de9b54485002bb584fd1575cff290428",
+    remote = "https://github.com/AppliedDeepLearning/gymx",
 )
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
@@ -492,10 +499,10 @@ go_repository(
 
 go_repository(
     name = "com_github_dgraph_io_badger_v2",
+    build_file_proto_mode = "disable",
     importpath = "github.com/dgraph-io/badger/v2",
     sum = "h1:EjjK0KqwaFMlPin1ajhP943VPENHJdEz1KLIegjaI3k=",
     version = "v2.2007.2",
-    build_file_proto_mode = "disable",
 )
 
 go_repository(

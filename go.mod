@@ -16,6 +16,7 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/spf13/afero v1.2.2
 	github.com/urfave/cli v1.22.2
+	github.com/urfave/cli/v2 v2.2.0 // indirect
 	go.etcd.io/bbolt v1.3.3
 	go.uber.org/ratelimit v0.1.0
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
