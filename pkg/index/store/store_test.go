@@ -99,7 +99,7 @@ func Test_Index(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			store := testutil.NewMockStore(t, tc.content, false)
 			index := New(store)
-			if err := index.Reindex(store); err != nil {
+			if err := index.Reindex("", store); err != nil {
 				t.Fatal(err)
 			}
 			for _, search := range tc.search {
