@@ -19,7 +19,7 @@ import (
 const (
 	Prefix = "jc"
 
-	baseURL    = "https://bet.hkjc.com/football/getJSON.aspx"
+	BaseURL    = "https://bet.hkjc.com/football/getJSON.aspx"
 	dateFormat = "2006-01-02"
 )
 
