@@ -2,18 +2,11 @@ syntax = "proto3";
 
 package model;
 
-import "google/protobuf/timestamp.proto";
-
 message Odd {
   string id = 1;
   float odd = 2;
   string source = 3;
   string match_id = 4;
-  google.protobuf.Timestamp last_update = 5;
-  enum Outcome {
-    HOME = 0;
-    AWAY = 1;
-    DRAW = 2;
-  };
-  Outcome outcome = 6;
+  string outcome = 6;
+  string type = 7;
 }

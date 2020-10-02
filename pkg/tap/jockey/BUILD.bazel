@@ -12,8 +12,6 @@ go_library(
     deps = [
         "//pkg/client:go_default_library",
         "//pkg/store:go_default_library",
-        "//proto/source/jockey:go_default_library",
-        "@com_github_jonboulle_clockwork//:go_default_library",
     ],
 )
 
@@ -21,13 +19,13 @@ go_test(
     name = "go_default_test",
     srcs = [
         "client_test.go",
+        "odd_test.go",
         "result_test.go",
     ],
     data = ["//:testdata"],
     embed = [":go_default_library"],
     deps = [
-        "//pkg/client:go_default_library",
+        "//pkg/tap:go_default_library",
         "//testutil:go_default_library",
-        "@com_github_jonboulle_clockwork//:go_default_library",
     ],
 )

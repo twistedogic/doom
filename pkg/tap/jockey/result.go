@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	dateFormat = "20060102"
+	resultDateFormat = "20060102"
 
 	resultQuery  = "search_result.aspx"
 	startDateKey = "startdate"
@@ -21,8 +21,8 @@ const (
 func getResultURL(base string, start, end time.Time) string {
 	terms := make(map[string]string)
 	terms[typeKey] = resultQuery
-	terms[startDateKey] = start.Format(dateFormat)
-	terms[endDateKey] = end.Format(dateFormat)
+	terms[startDateKey] = start.Format(resultDateFormat)
+	terms[endDateKey] = end.Format(resultDateFormat)
 	return fmt.Sprintf("%s?%s&teamid=default", base, toQueryString(terms))
 }
 
@@ -49,11 +49,16 @@ type ResultTap struct {
 	start, end time.Time
 }
 
-func (r ResultTap) Update(ctx context.Context, s store.Store) error {
+func NewResultTap(base string, rate int, start, end time.Time) ResultTap {
+	c := New(base, rate)
+	return ResultTap{c, start, end}
+}
+
+func (r ResultTap) Update(ctx context.Context, s store.Setter) error {
 	chunks := chunkTime(r.start, r.end, MONTH)
 	for _, chunk := range chunks {
 		url := getResultURL(r.BaseURL, chunk[0], chunk[1])
-		if err := r.Store(ctx, "result", url, "POST", nil, s); err != nil {
+		if err := r.StoreMatch(ctx, "result", url, "POST", nil, s); err != nil {
 			return err
 		}
 	}

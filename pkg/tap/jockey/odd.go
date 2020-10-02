@@ -24,7 +24,12 @@ type OddTap struct {
 	bet string
 }
 
-func (o OddTap) Update(ctx context.Context, s store.Store) error {
+func NewOddTap(base, bet string, rate int) OddTap {
+	c := New(base, rate)
+	return OddTap{c, bet}
+}
+
+func (o OddTap) Update(ctx context.Context, s store.Setter) error {
 	url := getOddURL(o.BaseURL, o.bet)
-	return o.Store(ctx, o.bet, url, "GET", nil, s)
+	return o.StoreMatch(ctx, o.bet, url, "GET", nil, s)
 }

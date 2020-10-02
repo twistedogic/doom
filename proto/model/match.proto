@@ -19,15 +19,5 @@ message Match {
   google.protobuf.Timestamp match_date = 2;
   Team home = 3;
   Team away = 4;
-  enum Result {
-    HOME = 0;
-    AWAY = 1;
-    DRAW = 2;
-    IN_PROGRESS = 3;
-    CANCELLED = 4;
-  }
-  Result result = 5;
-  Score first_half = 6;
-  Score second_half = 7;
-  Score extra_time = 8;
+  repeated Score score = 6;
 }

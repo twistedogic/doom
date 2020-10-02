@@ -3,22 +3,24 @@ package jockey
 import (
 	"bytes"
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
 	"strings"
+	"time"
 
-	"github.com/jonboulle/clockwork"
 	"github.com/twistedogic/doom/pkg/client"
 	"github.com/twistedogic/doom/pkg/store"
-	pb "github.com/twistedogic/doom/proto/source/jockey"
 )
 
 const (
 	Prefix = "jc"
 
-	baseURL = "https://bet.hkjc.com/football/getJSON.aspx"
+	baseURL    = "https://bet.hkjc.com/football/getJSON.aspx"
+	dateFormat = "2006-01-02"
 )
 
 func toQueryString(kv map[string]string) string {
@@ -30,18 +32,13 @@ func toQueryString(kv map[string]string) string {
 	return strings.Join(terms, "&")
 }
 
-func storeProto(key string, match *pb.Match, s store.Store) error {
-	b, err := match.Marshal()
-	if err != nil {
-		return err
-	}
-	return s.Set(key, b)
+type container struct {
+	Matches []json.RawMessage
 }
 
 type Client struct {
 	BaseURL string
 	client.Client
-	clockwork.Clock
 }
 
 func New(u string, rate int) Client {
@@ -49,39 +46,33 @@ func New(u string, rate int) Client {
 	return Client{
 		BaseURL: u,
 		Client:  c,
-		Clock:   clockwork.NewRealClock(),
 	}
 }
 
-func (c Client) storeProto(typePrefix string, b []byte, s store.Store) error {
-	var data []*pb.Data
-	if err := json.Unmarshal(b, &data); err != nil {
+func (c Client) Store(typePrefix string, b []byte, s store.Setter) error {
+	h := sha1.New()
+	h.Write(b)
+	hashKey := hex.EncodeToString(h.Sum(nil)[:12])
+	ts := time.Now().Format(dateFormat)
+	key := fmt.Sprintf("%s_%s_%s_%s", Prefix, typePrefix, ts, hashKey)
+	return s.Set(key, b)
+}
+
+func (c Client) StoreMatch(ctx context.Context, typePrefix, url, method string, body io.Reader, s store.Setter) error {
+	buf := new(bytes.Buffer)
+	if err := c.Request(ctx, method, url, body, buf); err != nil {
 		return err
 	}
-	for _, matches := range data {
-		for _, match := range matches.GetMatches() {
-			key := fmt.Sprintf("%s_%s_%s", Prefix, typePrefix, match.GetId())
-			if err := storeProto(key, match, s); err != nil {
+	var containers []container
+	if err := json.Unmarshal(buf.Bytes(), &containers); err != nil {
+		return err
+	}
+	for _, data := range containers {
+		for _, m := range data.Matches {
+			if err := c.Store(typePrefix, []byte(m), s); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
-}
-
-func (c Client) storeRaw(typePrefix string, b []byte, s store.Store) error {
-	key := fmt.Sprintf("%s_%s_%d_raw", Prefix, typePrefix, c.Now().Unix())
-	return s.Set(key, b)
-}
-
-func (c Client) Store(ctx context.Context, typePrefix, url, method string, body io.Reader, s store.Store) error {
-	buf := new(bytes.Buffer)
-	if err := c.Request(ctx, method, url, body, buf); err != nil {
-		return err
-	}
-	b := buf.Bytes()
-	if err := c.storeRaw(typePrefix, b, s); err != nil {
-		return err
-	}
-	return c.storeProto(typePrefix, b, s)
 }

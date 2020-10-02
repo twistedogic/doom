@@ -128,3 +128,7 @@ func (m *MockStore) Scan(...string) ([]string, error) {
 	}
 	return keys, nil
 }
+
+func (m *MockStore) Close() error {
+	return nil
+}

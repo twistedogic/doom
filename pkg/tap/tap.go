@@ -7,7 +7,7 @@ import (
 )
 
 type Tap interface {
-	Update(context.Context, store.Store) error
+	Update(context.Context, store.Setter) error
 }
 
 type TapOperation struct {

@@ -26,7 +26,7 @@ message TotalOdd {
   string p4 = 7 [(gogoproto.jsontag) = "P4"];
   string p5 = 8 [(gogoproto.jsontag) = "P5"];
   string p6 = 9 [(gogoproto.jsontag) = "P6"];
-  string p7 = 10 [(gogoproto.jsontag) = "M7"];
+  string m7 = 10 [(gogoproto.jsontag) = "M7"];
 }
 
 message League {
@@ -58,7 +58,7 @@ message Score {
 
 message Match {
   string id = 1 [(gogoproto.jsontag) = "matchID"];
-  string match_time = 2;
+  string match_time = 2 [(gogoproto.jsontag) = "matchDate"];
   Team home_team = 3 [(gogoproto.jsontag) = "homeTeam"];
   Team away_team = 4 [(gogoproto.jsontag) = "awayTeam"];
   HadOdd fhaodds = 5;

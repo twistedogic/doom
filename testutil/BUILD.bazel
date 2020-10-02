@@ -4,9 +4,13 @@ go_library(
     name = "go_default_library",
     srcs = [
         "store.go",
+        "tap.go",
         "testutil.go",
     ],
     importpath = "github.com/twistedogic/doom/testutil",
     visibility = ["//visibility:public"],
-    deps = ["//pkg/store:go_default_library"],
+    deps = [
+        "//pkg/store:go_default_library",
+        "//pkg/tap:go_default_library",
+    ],
 )
