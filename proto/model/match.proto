@@ -20,4 +20,5 @@ message Match {
   Team home = 3;
   Team away = 4;
   repeated Score score = 6;
+  repeated string odd_ids = 7;
 }

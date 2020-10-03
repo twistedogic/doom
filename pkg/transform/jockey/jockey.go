@@ -150,15 +150,20 @@ func TransformJockey(b []byte) ([]*model.Match, []*model.Odd, error) {
 	}
 	matches := []*model.Match(nil)
 	id := m.GetId()
-	if match, err := transformMatch(m); err == nil {
-		matches = append(matches, match)
-	} else {
-		return nil, nil, err
-	}
 	fhaodds := transformHadOdd(id, m.GetFhaodds())
 	hadodds := transformHadOdd(id, m.GetHadodds())
 	ttgodds := transformTotalOdd(id, m.GetTtgodds())
 	odds := append(fhaodds, hadodds...)
 	odds = append(odds, ttgodds...)
+	if match, err := transformMatch(m); err == nil {
+		oddIds := make([]string, len(odds))
+		for i, odd := range odds {
+			oddIds[i] = odd.GetId()
+		}
+		match.OddIds = oddIds
+		matches = append(matches, match)
+	} else {
+		return nil, nil, err
+	}
 	return matches, odds, nil
 }
