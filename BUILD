@@ -30,3 +30,10 @@ filegroup(
     srcs = glob(["testdata/**"]),
     visibility = ["//visibility:public"],
 )
+
+genrule(
+   name = "build",
+   srcs = [":doom"],
+   outs = ["bin/doom"],
+   cmd = "cp $(SRCS) $@",
+)
