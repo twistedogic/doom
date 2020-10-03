@@ -3,41 +3,46 @@ package schedule
 import (
 	"context"
 	"log"
-	"sync"
+	"time"
+
+	"github.com/benbjohnson/clock"
 )
 
-type Job interface {
-	Run(context.Context) error
-}
-
 type Scheduler struct {
-	entries []Job
+	clock.Clock
+	Interval, Timeout time.Duration
 }
 
-func New(entries ...Job) Scheduler {
-	return Scheduler{entries}
-}
+type Task func(context.Context) error
 
-func (s Scheduler) Start(ctx context.Context) error {
-	wg := new(sync.WaitGroup)
-	errCh := make(chan error)
-	defer close(errCh)
-	go func() {
-		for err := range errCh {
-			log.Println(err)
-		}
-	}()
-	for _, job := range s.entries {
-		jobCtx, cancel := context.WithCancel(ctx)
-		defer cancel()
-		wg.Add(1)
-		go func(c context.Context, j Job) {
-			defer wg.Done()
-			if err := j.Run(c); err != nil {
-				errCh <- err
-			}
-		}(jobCtx, job)
+func New(interval, timeout time.Duration) Scheduler {
+	return Scheduler{
+		Clock:    clock.New(),
+		Interval: interval,
+		Timeout:  timeout,
 	}
-	wg.Wait()
-	return nil
+}
+
+func (s Scheduler) runOnce(ctx context.Context, task Task) {
+	execCtx, cancel := context.WithCancel(ctx)
+	go func() {
+		<-s.After(s.Timeout)
+		cancel()
+	}()
+	if err := task(execCtx); err != nil {
+		log.Println(err)
+	}
+}
+
+func (s Scheduler) Start(ctx context.Context, task Task) error {
+	for {
+		select {
+		case <-ctx.Done():
+			break
+		default:
+			go s.runOnce(ctx, task)
+		}
+		s.Sleep(s.Interval)
+	}
+	return ctx.Err()
 }

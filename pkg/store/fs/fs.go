@@ -47,3 +47,5 @@ func (f FileStore) Scan(pattern ...string) ([]string, error) {
 	}
 	return matches, nil
 }
+
+func (f FileStore) Close() error { return nil }

@@ -1,13 +1,16 @@
 package client
 
 import (
+	"context"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 
-	"github.com/twistedogic/doom/pkg/tap"
 	"go.uber.org/ratelimit"
+)
+
+const (
+	agentHeader = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36"
 )
 
 func NewLimiter(rate int) ratelimit.Limiter {
@@ -29,9 +32,20 @@ func New(rate int) Client {
 	}
 }
 
-func (c Client) Request(req *http.Request, w io.Writer) error {
+func setAgent(req *http.Request) {
+	header := req.Header
+	header.Set("User-Agent", agentHeader)
+	req.Header = header
+}
+
+func (c Client) Request(ctx context.Context, method, url string, body io.Reader, w io.Writer) error {
 	c.Take()
-	log.Printf("%s %s", req.Method, req.URL)
+	log.Printf("%s %s", method, url)
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return err
+	}
+	setAgent(req)
 	res, err := c.Do(req)
 	if err != nil {
 		return err
@@ -41,27 +55,4 @@ func (c Client) Request(req *http.Request, w io.Writer) error {
 		return err
 	}
 	return nil
-}
-
-func (c Client) GetResponse(u string, w io.Writer) error {
-	req, err := http.NewRequest("GET", u, nil)
-	if err != nil {
-		return err
-	}
-	return c.Request(req, w)
-}
-
-func (c Client) WriteToTarget(u string, target tap.Target) error {
-	c.Take()
-	log.Printf("GET %s", u)
-	res, err := c.Get(u)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	b, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
-	return target.Write(b)
 }
