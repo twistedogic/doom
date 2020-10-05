@@ -32,8 +32,8 @@ filegroup(
 )
 
 genrule(
-   name = "build",
-   srcs = [":doom"],
-   outs = ["bin/doom"],
-   cmd = "cp $(SRCS) $@",
+    name = "build",
+    srcs = [":doom"],
+    outs = ["bin/doom"],
+    cmd = "cp $(SRCS) $@",
 )
