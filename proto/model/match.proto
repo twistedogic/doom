@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 
 message Team {
   string id = 1;
-  string name = 3;
+  string name = 2;
 }
 
 message Score {
