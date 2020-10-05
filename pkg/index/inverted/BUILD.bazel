@@ -1,0 +1,26 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["inverted.go"],
+    importpath = "github.com/twistedogic/doom/pkg/index/inverted",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/index:go_default_library",
+        "//pkg/store:go_default_library",
+        "//proto/model:go_default_library",
+        "@com_github_golang_protobuf//proto:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["inverted_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//proto/model:go_default_library",
+        "//testutil:go_default_library",
+        "@com_github_golang_protobuf//proto:go_default_library",
+        "@com_github_google_go_cmp//cmp:go_default_library",
+    ],
+)

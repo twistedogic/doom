@@ -5,6 +5,7 @@ load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 proto_library(
     name = "model_proto",
     srcs = [
+        "index.proto",
         "match.proto",
         "odd.proto",
     ],
