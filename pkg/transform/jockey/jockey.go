@@ -114,14 +114,14 @@ func transformScore(s *jockey.Score) (*model.Score, error) {
 	}, nil
 }
 
-func transformMatch(m *jockey.Match) (*model.Match, error) {
+func transformMatch(m *jockey.Match, out *model.Match) error {
 	matchTime, err := parseDate(m.GetMatchTime())
 	if err != nil {
-		return nil, err
+		return err
 	}
 	matchDate, err := types.TimestampProto(matchTime)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	id := m.GetId()
 	home := transformTeam(m.GetHomeTeam())
@@ -130,40 +130,32 @@ func transformMatch(m *jockey.Match) (*model.Match, error) {
 	for i, s := range m.GetScore() {
 		score, err := transformScore(s)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		scores[i] = score
 	}
-	return &model.Match{
-		Id:        id,
-		MatchDate: matchDate,
-		Home:      home,
-		Away:      away,
-		Score:     scores,
-	}, nil
+	out.Id = id
+	out.MatchDate = matchDate
+	out.Home = home
+	out.Away = away
+	out.Score = scores
+	return nil
 }
 
-func TransformJockey(b []byte) ([]*model.Match, []*model.Odd, error) {
+func TransformJockey(b []byte, out *model.Match) error {
 	m := new(jockey.Match)
 	if err := json.Unmarshal(b, m); err != nil {
-		return nil, nil, err
+		return err
 	}
-	matches := []*model.Match(nil)
 	id := m.GetId()
 	fhaodds := transformHadOdd(id, m.GetFhaodds())
 	hadodds := transformHadOdd(id, m.GetHadodds())
 	ttgodds := transformTotalOdd(id, m.GetTtgodds())
 	odds := append(fhaodds, hadodds...)
 	odds = append(odds, ttgodds...)
-	if match, err := transformMatch(m); err == nil {
-		oddIds := make([]string, len(odds))
-		for i, odd := range odds {
-			oddIds[i] = odd.GetId()
-		}
-		match.OddIds = oddIds
-		matches = append(matches, match)
-	} else {
-		return nil, nil, err
+	if err := transformMatch(m, out); err != nil {
+		return err
 	}
-	return matches, odds, nil
+	out.Odds = odds
+	return nil
 }
