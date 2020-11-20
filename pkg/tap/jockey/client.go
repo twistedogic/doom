@@ -54,7 +54,7 @@ func (c Client) Store(typePrefix string, b []byte, s store.Setter) error {
 	h.Write(b)
 	hashKey := hex.EncodeToString(h.Sum(nil)[:12])
 	ts := time.Now().Format(dateFormat)
-	key := fmt.Sprintf("%s_%s_%s_%s", Prefix, typePrefix, ts, hashKey)
+	key := fmt.Sprintf("raw|%s_%s_%s_%s", Prefix, typePrefix, ts, hashKey)
 	return s.Set(key, b)
 }
 
