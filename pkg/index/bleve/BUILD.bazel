@@ -1,0 +1,23 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["bleve.go"],
+    importpath = "github.com/twistedogic/doom/pkg/index/bleve",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/index:go_default_library",
+        "//pkg/store:go_default_library",
+        "//proto/model:go_default_library",
+        "@com_github_blevesearch_bleve//:go_default_library",
+        "@com_github_blevesearch_bleve//search/query:go_default_library",
+        "@com_github_golang_protobuf//proto:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["bleve_test.go"],
+    embed = [":go_default_library"],
+    deps = ["//testutil:go_default_library"],
+)
